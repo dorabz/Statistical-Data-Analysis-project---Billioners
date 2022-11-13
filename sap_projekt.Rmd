@@ -1,0 +1,107 @@
+---
+title: "SAP - projekt - Milijarderi"
+knit: (function(input_file, encoding) {
+  out_dir <- 'docs';
+  rmarkdown::render(input_file,
+ encoding=encoding,
+ output_file=file.path(dirname(input_file), out_dir, 'projekt_sap_dokumentacija.pdf'))})
+subtitle: "Uspjeh učenika u nastavi"
+author: "Dora Bezuk, Marcela Matas, Josip Arelic, Domagoj Marinello"
+date: "13.11.2022."
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r error=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+library("readxl")
+library(tidyverse)
+library(dplyr)
+```
+
+# Uvod
+
+Pitanja:
+
+1. Ima li neki kontinent statistički značajno više miljarda?
+
+2. Jesu li milijarderi koji su nasljedili bogastvo statistički značajno bogatiji od onih koji nisu?
+
+3. Možete li iz danih varijabli predvidjeti njihovo bogatstvo?
+
+4. Kada biste birali karijeru isključivo prema kriteriju da se obogatite, koju biste industriju izabrali?
+
+Dodatna pitanja:
+
+5. ???
+
+
+
+# Deskriptivna analiza
+
+```{r include=FALSE}
+# Učitavanje podataka iz excel datoteke
+# Promijeniti path u put do datoteke s podacima
+bill_data <- read_excel("billionaires.xlsx")
+```
+
+```{r include=FALSE}
+dim(bill_data) # dimenzije: 2614 redaka i 22 stupaca
+names(bill_data) # imena stupaca
+view(bill_data)
+
+# klase pojedinih stupaca
+sapply(bill_data, class)
+
+# klasa tablice
+class(bill_data) 
+# zaključak: bill_data podaci su dobro učitani
+```
+
+```{r}
+cat('\n Dimenzija podataka: ', dim(bill_data))
+```
+
+
+
+```{r}
+for (col_name in names(bill_data)){
+  if (sum(is.na(bill_data[,col_name])) > 0){
+    cat('Ukupno nedostajućih vrijednosti za varijablu'
+        ,col_name, ': ', sum(is.na(bill_data[,col_name])),'\n')
+  }
+}
+
+```
+
+
+Postoje podaci koji nedostaju. Što s njima?
+
+
+# Pitanja
+
+## 1. Ima li neki kontinent statistički značajno više miljarda?
+
+
+## 2. Jesu li milijarderi koji su nasljedili bogastvo statistički značajno bogatiji od onih koji nisu?
+
+
+### Formiranje hipoteza
+
+#### Vizualizacija podataka
+
+### Pretpostavke za provođenje testa
+
+#### Test xy
+
+### Provođenje T-testa
+
+### Zaključak
+
+
+
+## 3. Možete li iz danih varijabli predvidjeti njihovo bogatstvo?
+
+
+## 4. Kada biste birali karijeru isključivo prema kriteriju da se obogatite, koju biste industriju izabrali?
