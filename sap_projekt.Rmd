@@ -86,6 +86,26 @@ Postoje podaci koji nedostaju. Što s njima?
 
 ## 2. Jesu li milijarderi koji su nasljedili bogastvo statistički značajno bogatiji od onih koji nisu?
 
+```{r}
+# Učitavanje podataka iz excel datoteke
+
+inherited = bill_data[bill_data$wealth.how.inherited!="not inherited",]
+print(inherited)
+non_inherited = bill_data[bill_data$wealth.how.inherited=="not inherited",]
+print(non_inherited)
+inherited_mean = mean(inherited$`wealth.worth in billions`)
+print(inherited_mean)
+hist(inherited$`wealth.worth in billions`, breaks = 20)
+non_inherited_mean = mean(non_inherited$`wealth.worth in billions`)
+print(non_inherited_mean)
+hist(non_inherited$`wealth.worth in billions`, breaks = 20)
+boxplot(inherited$`wealth.worth in billions`)
+boxplot(non_inherited$`wealth.worth in billions`)
+wilcox.test(inherited_mean, non_inherited_mean, alternative = "two.sided")
+
+# jel smijem odrezat dio podataka (pogledati histogram i box plot), koji dio? 
+# ako ne, koji test koristi? t-test za mediane umjesto meana? ili neparametarski test? kao sto je wilcoxon?
+```
 
 ### Formiranje hipoteza
 
