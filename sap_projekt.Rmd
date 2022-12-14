@@ -60,6 +60,16 @@ class(bill_data)
 ```
 
 ```{r}
+# Pomoćna funkcija za izbacivanje stršećih vrijednosti
+remove_outliers <- function(data, data_column) {
+  quartiles <- quantile(data_column, probs=c(.25, .75), na.rm = FALSE)
+  IQR <- IQR(data_column)
+  Lower <- quartiles[1] - 1.5*IQR
+  Upper <- quartiles[2] + 1.5*IQR 
+  
+  return(subset(data, data_column >= Lower & data_column <= Upper))
+}
+
 cat('\n Dimenzija podataka: ', dim(bill_data))
 ```
 
@@ -125,3 +135,13 @@ wilcox.test(inherited_mean, non_inherited_mean, alternative = "two.sided")
 
 
 ## 4. Kada biste birali karijeru isključivo prema kriteriju da se obogatite, koju biste industriju izabrali?
+
+Pretpostavljamo da karijerom u određenoj industriji, a ne nasljedstvom zarađujemo novac. Zbog toga gledamo samo milijardere koji nisu nasljedili svoje bogatstvo.
+
+```{r}
+#
+par(mar=c(10,5,1,1))
+barplot(sort(table(subset(non_inherited$wealth.how.industry, non_inherited$wealth.how.industry != "0")), decreasing = TRUE),
+        main = "Billionaires distribution by industry (non-inherited wealth)",
+        las = 2)
+```
