@@ -133,11 +133,15 @@ wilcox.test(inherited_mean, non_inherited_mean, alternative = "two.sided")
 
 ## 3. Možete li iz danih varijabli predvidjeti njihovo bogatstvo?
 
+ + je li dobro tu koristiti sve milijardere s popisa 2014 + milijarderi s prethodnih popisa (ako nisu na popisu iz 2014. godine)
 
 ## 4. Kada biste birali karijeru isključivo prema kriteriju da se obogatite, koju biste industriju izabrali?
 
 Pretpostavljamo da karijerom u određenoj industriji, a ne nasljedstvom zarađujemo novac. Zbog toga gledamo samo milijardere koji nisu nasljedili svoje bogatstvo.
-Također, zanimaju nas samo najnoviji milijarderi odnosno oni s popisa iz 2014. godine. 
+Također, zanimaju nas samo najnoviji milijarderi odnosno oni s popisa iz 2014. godine.
+
+ + kako prikazati trend kroz godine na grafu (dijagram paralelnih koordinata?)
+ + možda gledati razliku iz popisa 2014 i 2001, odnosno nove milijardere - pa napraviti raspodjelu industrija novonastalih milijardera
 
 ```{r}
 #
