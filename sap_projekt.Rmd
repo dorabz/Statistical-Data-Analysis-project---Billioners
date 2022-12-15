@@ -137,11 +137,15 @@ wilcox.test(inherited_mean, non_inherited_mean, alternative = "two.sided")
 ## 4. Kada biste birali karijeru isključivo prema kriteriju da se obogatite, koju biste industriju izabrali?
 
 Pretpostavljamo da karijerom u određenoj industriji, a ne nasljedstvom zarađujemo novac. Zbog toga gledamo samo milijardere koji nisu nasljedili svoje bogatstvo.
+Također, zanimaju nas samo najnoviji milijarderi odnosno oni s popisa iz 2014. godine. 
 
 ```{r}
 #
+non_inherited_2014 <- non_inherited[non_inherited$year == 2014,]
+
 par(mar=c(10,5,1,1))
-barplot(sort(table(subset(non_inherited$wealth.how.industry, non_inherited$wealth.how.industry != "0")), decreasing = TRUE),
+barplot(sort(table(subset(non_inherited_2014$wealth.how.industry, non_inherited_2014$wealth.how.industry != "0")), decreasing = TRUE),
         main = "Billionaires distribution by industry (non-inherited wealth)",
         las = 2)
 ```
+
