@@ -89,9 +89,161 @@ for (col_name in names(bill_data)){
 Postoje podaci koji nedostaju. Što s njima?
 
 
+```{r}
+summary(bill_data)
+
+
+```
+```{r}
+sapply(bill_data, class)
+```
+Naš dataset sastoji se od character i numeric varijabli.
+
+Prvo promotrimo numeričke varijable.
+```{r}
+
+hist(bill_data$`wealth.worth in billions` ,main='wealth worth in billions', xlab='wealth', ylab='Frequency', col="pink")
+
+boxplot(bill_data$`wealth.worth in billions`)
+summary(bill_data$`wealth.worth in billions`)
+
+```
+```{r}
+
+barplot(table(bill_data$wealth.type),las=2,cex.names=.9,main='Wealth type',col="pink")
+barplot(table(bill_data$wealth.how.industry),las=2,cex.names=.7,main='Industry',col="pink")
+print('Podjela po spolu: ')
+table(bill_data$demographics.gender)
+
+```
+
 # Pitanja
 
 ## 1. Ima li neki kontinent statistički značajno više miljarda?
+
+```{r}
+levels(factor(bill_data$location.region))
+```
+
+```{r}
+class(bill_data$location.region)
+
+```
+Treba li tip stupca biti factor?
+
+
+Ima li nedostajućih vrijednosti?
+```{r}
+# is.na ce nam vratiti logical vektor koji ima TRUE na mjestima gdje ima NA:
+sum(is.na(bill_data$location.region)) 
+ 
+
+```
+
+Nema nedostajućih vrijednosti
+```{r}
+table(bill_data$location.region)
+
+
+
+```
+
+```{r}
+
+
+bill_data$location.citizenship[bill_data$location.region == "Middle East/North Africa"]
+
+```
+
+Sada možemo združiti podatke ovisno o kontinentu.
+
+Kopirajmo najprije podatke u novi data.frame kako ne bi promijenili prave vrijednosti.
+
+```{r}
+bill_data_copy = data.frame(bill_data)
+tracemem(bill_data)==tracemem(bill_data_copy)
+untracemem(bill_data_copy)
+untracemem(bill_data_copy)
+```
+
+
+
+```{r,results='hide'}
+# Zdruzimo Europu
+for (column_name in c("Europe")){
+  bill_data_copy$location.region[bill_data_copy$location.region == column_name] = "Europe";
+}
+
+# Zdruzimo Afriku
+for (column_name in c("Lebanon","Egypt","Morocco","Algeria")){
+  bill_data_copy$location.region[bill_data_copy$location.citizenship == column_name] = "Africa";
+}
+
+for (column_name in c("Sub-Saharan Africa")){
+  bill_data_copy$location.region[bill_data_copy$location.region == column_name] = "Africa";
+}
+
+# zdruzimo Sjevernu Ameriku
+for (column_name in c("North America")){
+  bill_data_copy$location.region[bill_data_copy$location.region == column_name] = "North America";
+}
+
+# Zdruzimo Južnu Ameriku
+for (column_name in c("Latin America")){
+  bill_data_copy$location.region[bill_data_copy$location.region == column_name] = "South America";
+}
+
+# Zdruzimo Aziju
+for (column_name in c("East Asia","South Asia")){
+  bill_data_copy$location.region[bill_data_copy$location.region == column_name] = "Asia";
+}
+for (column_name in c("Saudi Arabia","Kuwait","United Arab Emirates","Israel","Turkey","Oman","Bahrain")){
+  bill_data_copy$location.region[bill_data_copy$location.citizenship == column_name] = "Asia";
+}
+
+
+bill_data_copy
+
+```
+```{r}
+tbl = table(bill_data_copy$location.region)
+print(tbl)
+
+```
+
+
+##continent_frequency=transform(bill_data_copy,continent_frequency=ave(seq(nrow(bill_data_copy)),location.region ,FUN=length)
+df1=transform(bill_data_copy,continent_frequency=ave(seq(nrow(bill_data_copy)),location.region ,FUN=length))
+df1
+
+```{r}
+df <- data.frame(continent=c("Europe", "Asia", "Africa","North America","South America"),
+                continent_frequency=c(697, 699, 43, 992, 182))
+head(df)
+
+library(ggplot2)
+
+
+# Barplot
+p<-ggplot(data=df, aes(x=continent, y=continent_frequency)) +
+  geom_bar(stat="identity")
+p
+
+
+box_edu <- ggplot(bill_data_copy %>% filter(!location.region=="0"), aes(x=location.region, y= wealth.worth.in.billions, fill=location.region)) +
+    geom_boxplot(alpha=0.7, ) + scale_y_log10() +
+    stat_summary(fun=mean, geom="point", shape=20, size=7, color="black", fill="black") +
+    theme(legend.position="none") + labs(x="Continent",y="Wealth")+
+    scale_fill_brewer(name="Continent",palette="GnBu")
+box_edu
+
+
+
+
+
+
+```
+
 
 
 ## 2. Jesu li milijarderi koji su nasljedili bogastvo statistički značajno bogatiji od onih koji nisu?
