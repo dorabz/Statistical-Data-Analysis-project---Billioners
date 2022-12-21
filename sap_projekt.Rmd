@@ -248,38 +248,96 @@ box_edu
 
 ## 2. Jesu li milijarderi koji su nasljedili bogastvo statistički značajno bogatiji od onih koji nisu?
 
-```{r}
-# Učitavanje podataka iz excel datoteke
+Potrebno je pripremiti podatke za obradu, razdvojiti podatke iz tablice po polju
+how.inherited u dva slučaja: inherited (oni koju su nasljedili bogatstvo) i 
+non_inherited (oni koji nisu nasljedili bogatstvo).
 
+```{r}
+ 
 inherited = bill_data[bill_data$wealth.how.inherited!="not inherited",]
 print(inherited)
+
 non_inherited = bill_data[bill_data$wealth.how.inherited=="not inherited",]
 print(non_inherited)
-inherited_mean = mean(inherited$`wealth.worth in billions`)
-print(inherited_mean)
-hist(inherited$`wealth.worth in billions`, breaks = 20)
-non_inherited_mean = mean(non_inherited$`wealth.worth in billions`)
-print(non_inherited_mean)
-hist(non_inherited$`wealth.worth in billions`, breaks = 20)
-boxplot(inherited$`wealth.worth in billions`)
-boxplot(non_inherited$`wealth.worth in billions`)
-wilcox.test(inherited_mean, non_inherited_mean, alternative = "two.sided")
-
-# jel smijem odrezat dio podataka (pogledati histogram i box plot), koji dio? 
-# ako ne, koji test koristi? t-test za mediane umjesto meana? ili neparametarski test? kao sto je wilcoxon?
 ```
 
-### Formiranje hipoteza
+Zatim je potrebno izračunati srednju vrijednost (mean) posebno za svaki slučaj
+uzimajući u obzir polje worth.in billions.
 
-#### Vizualizacija podataka
+```{r}
+inherited_mean = mean(inherited$`wealth.worth in billions`)
+print(inherited_mean)
 
-### Pretpostavke za provođenje testa
+non_inherited_mean = mean(non_inherited$`wealth.worth in billions`)
+print(non_inherited_mean)
 
-#### Test xy
+```
 
-### Provođenje T-testa
+Na temelju male razlike u srednjim vrijednostima, ne postoje indikacije da su 
+milijarderi koji su nasljedili bogatstvo statistički značajno bogatiji 
+od onih koji nisu. No, navedeno je potrebno provjeriti.
 
-### Zaključak
+
+Kako bi bolje vizualizirali podatke  crtamo histogram i box plot za svaki od
+slučaja:
+
+```{r}
+hist(inherited$`wealth.worth in billions`, breaks = 20)
+boxplot(inherited$`wealth.worth in billions`)
+
+hist(non_inherited$`wealth.worth in billions`, breaks = 20)
+boxplot(non_inherited$`wealth.worth in billions`)
+```
+
+Iz prikazane vizualizacije uočavamo kako se podaci ne ravnaju po
+normalnoj distribuciji.
+
+Što se može bolje vidjeti sa sljedećih prikaza:
+```{r}
+qqnorm(inherited$`wealth.worth in billions`, pch = 1, frame = FALSE,main='Inherited')
+qqline(inherited$`wealth.worth in billions`, col = "blue", lwd = 2)
+
+qqnorm(non_inherited$`wealth.worth in billions`, pch = 1, frame = FALSE,main='Non inherited')
+qqline(non_inherited$`wealth.worth in billions`, col = "red", lwd = 2)
+
+```
+
+Ipak, uočeno je potrebno dodatno ispitati koristeći Kolmogorov–Smirnov test 
+kojim se utvrđuje ravna li se distribucija po normalnoj razdiobi.
+
+```{r}
+ks.test(inherited$`wealth.worth in billions`, y="pnorm")
+ks.test(non_inherited$`wealth.worth in billions`, y="pnorm")
+```
+
+Iz dobivenih p vrijednosti u oba slučaja odbacujemo mogućnost da se distribucije
+ravnaju po normalnoj razdiobi. 
+
+Time je potvrđena pretpostavka da se podaci ne ravnaju po normalnoj distribuciji.
+
+Potrebno je koristiti neparametarski test Mann–Whitney U test, koji se koristi 
+kada se podaci se ravnaju po istim distribucijama (obje distribucije su nakošene
+u desno) i uzorci su nezavisni iz jedne i druge populacije (jedna osoba ne može
+nasljediti i nenasljediti bogatstvo).
+
+
+Hipoteze glase:
+$$ \begin{aligned}
+H_0&: \mu_1 = \mu_2 \\
+H_1&: \mu_1 > \mu_2 \quad \quad 
+\end{aligned} $$
+
+
+```{r}
+ 
+wilcox.test(inherited_mean, non_inherited_mean, alt = "greater")
+
+```
+
+Zbog p-vrijednost jednake 0.5, na temelju značajnosti od 50% ne možemo odbaciti 
+$H_0$ hipotezu o jednakosti prosječnih vrijednosti bogatstva u korist $H_1$, 
+odnosno možemo reći da milijarderi koji su nasljedili bogatstvo nisu statistički
+značajno bogatiji od onih koji nisu.
 
 
 
