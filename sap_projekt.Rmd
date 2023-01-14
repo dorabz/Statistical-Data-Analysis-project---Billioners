@@ -34,14 +34,10 @@ Pitanja:
 
 4. Kada biste birali karijeru isključivo prema kriteriju da se obogatite, koju biste industriju izabrali?
 
-Dodatna pitanja:
-
-5. ???
-
-
 
 # Deskriptivna analiza
 
+Potrebno je učitati podatke.
 ```{r include=FALSE}
 # Učitavanje podataka iz excel datoteke
 # Promijeniti path u put do datoteke s podacima
@@ -86,9 +82,6 @@ for (col_name in names(bill_data)){
 }
 
 ```
-
-
-Postoje podaci koji nedostaju. Što s njima?
 
 
 ```{r}
@@ -312,12 +305,8 @@ how.inherited u dva slučaja: inherited (oni koju su nasljedili bogatstvo) i
 non_inherited (oni koji nisu nasljedili bogatstvo).
 
 ```{r}
- 
 inherited = bill_data[bill_data$wealth.how.inherited!="not inherited",]
-print(inherited)
-
 non_inherited = bill_data[bill_data$wealth.how.inherited=="not inherited",]
-print(non_inherited)
 ```
 
 Zatim je potrebno izračunati srednju vrijednost (mean) posebno za svaki slučaj
@@ -337,7 +326,7 @@ milijarderi koji su nasljedili bogatstvo statistički značajno bogatiji
 od onih koji nisu. No, navedeno je potrebno provjeriti.
 
 
-Kako bi bolje vizualizirali podatke  crtamo histogram i box plot za svaki od
+Kako bi bolje vizualizirali podatke crtamo histogram i box plot za svaki od
 slučaja:
 
 ```{r}
