@@ -18,6 +18,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library("readxl")
 library(tidyverse)
 library(dplyr)
+library(fastDummies)
+
 ```
 
 # Uvod
@@ -119,7 +121,7 @@ table(bill_data$demographics.gender)
 
 # Pitanja
 
-## 1. Ima li neki kontinent statistički značajno više miljarda?
+## 1. Ima li neki kontinent statistički značajno više miljardi?
 
 ```{r}
 levels(factor(bill_data$location.region))
@@ -243,7 +245,64 @@ box_edu
 
 
 ```
+Pretpostavke ANOVA-e su:
 
+- nezavisnost pojedinih podataka u uzorcima,
+- normalna razdioba podataka,
+- homogenost varijanci među populacijama. 
+
+Kad su veličine grupa podjednake, ANOVA je relativno robusna metoda na blaga odstupanja od pretpostavke normalnosti i homogenosti varijanci. Ipak, dobro je provjeriti koliko su ta odstupanja velika. 
+
+Provjera normalnosti može se za svaku pojedinu grupu napraviti KS testom ili Lillieforsovom inačicom KS testa. U ovom slučaju razmatrat ćemo location.region kao varijablu koja određuje grupe (populacije) i wealth kao zavisnu varijablu.
+
+```{r test pretpostavki - normalnost}
+
+# TODO: zakomentiraj ovu liniju ako ne želimo logaritmirati cijenu
+
+wealth <- log(bill_data_copy$wealth.worth.in.billions, 2)
+
+require(nortest)
+lillie.test(wealth)
+
+lillie.test(wealth[bill_data_copy$location.region=='Africa'])
+lillie.test(wealth[bill_data_copy$location.region=='Europe'])
+lillie.test(wealth[bill_data_copy$location.region=='South America'])
+lillie.test(wealth[bill_data_copy$location.region=='North America'])
+lillie.test(wealth[bill_data_copy$location.region=='Asia'])
+
+
+hist(wealth[bill_data_copy$location.region=='Africa'])
+hist(wealth[bill_data_copy$location.region=='Europe'])
+hist(wealth[bill_data_copy$location.region=='South America'])
+hist(wealth[bill_data_copy$location.region=='North America'])
+hist(wealth[bill_data_copy$location.region=='Asia'])
+
+```
+```{r test homogenosti}
+
+# Testiranje homogenosti varijance uzoraka Bartlettovim testom
+
+##bartlett.test(bill_data_copy$wealth.worth.in.billions ~ bill_data_copy$location.region)
+
+var((wealth[bill_data_copy$location.region=='Africa']))
+var((wealth[bill_data_copy$location.region=='Asia']))
+var((wealth[bill_data_copy$location.region=='Europe']))
+var((wealth[bill_data_copy$location.region=='North America']))
+var((wealth[bill_data_copy$location.region=='South America']))
+```
+
+Provjerimo postoje li razlike u prihodima za različite razine školovanja klijenata. 
+
+```{r test razlike u prihodima}
+
+# Graficki prikaz podataka
+boxplot(wealth ~ bill_data_copy$location.region)
+
+# Test
+a = aov(wealth ~ bill_data_copy$location.region)
+summary(a)
+
+```
 
 
 ## 2. Jesu li milijarderi koji su nasljedili bogastvo statistički značajno bogatiji od onih koji nisu?
@@ -344,6 +403,190 @@ značajno bogatiji od onih koji nisu.
 ## 3. Možete li iz danih varijabli predvidjeti njihovo bogatstvo?
 
  + je li dobro tu koristiti sve milijardere s popisa 2014 + milijarderi s prethodnih popisa (ako nisu na popisu iz 2014. godine)
+ 
+ 
+```{r}
+# bill_data
+
+# Izbacujemo stupce:
+# name
+# company.name
+# rank
+# location.gdp, više od pola vrijednosti su 0 (netočan podatak)
+# location.coutnry.code i location.citizenship a koristimo location.region koji je veće granulacije
+# wealth.how.from emerging, wealth.how.was founder, wealth.how.was political su konstantne varijable
+# company.sector jer ima previše različitih vrijednosti, koje kad bi one hot encodali bi dali previše stupaca
+
+exclude_cols = c("name", "company.name", "rank", "location.gdp", "location.country code", "location.citizenship", "wealth.how.from emerging", "wealth.how.was founder", "wealth.how.was political", "company.sector")
+
+# exclude columns and sort
+bill_data_clean <- bill_data %>% select(-one_of(exclude_cols)) %>% arrange(year)
+
+# to lowercase for consistency
+bill_data_clean[["company.relationship"]] <- tolower(bill_data_clean[["company.relationship"]] )
+
+# remove invalid data
+bill_data_clean <- bill_data_clean %>% filter(demographics.age > 0)
+bill_data_clean <- bill_data_clean %>% filter(!location.region == "0")
+
+# inflation rate $1.00 (1996) -> $1.51 (2014), +50.9%
+# inflation rate $1.00 (2001) -> $1.34 (2014), +33.7%
+bill_data_clean[bill_data_clean$year == "1996", "wealth.worth in billions"] <- bill_data_clean[bill_data_clean$year == "1996", "wealth.worth in billions"] * 1.509
+bill_data_clean[bill_data_clean$year == "2001", "wealth.worth in billions"] <- bill_data_clean[bill_data_clean$year == "2001", "wealth.worth in billions"] * 1.337
+
+# Iskoristili smo godinu da ažuriramo cijene (inflacija), sad ju odbacujemo
+bill_data_clean <- bill_data_clean %>% select(., -year)
+
+# merge similar roles to avoid 1 column = 1 row data
+bill_data_clean$company.relationship <- gsub(".*\b(owner)\b.*", "owner", bill_data_clean$company.relationship)
+bill_data_clean$company.relationship <- gsub(".*(ceo|chief executive officeor|chief executive officer|chief executive|exectuitve).*", "ceo", bill_data_clean$company.relationship)
+bill_data_clean$company.relationship <- gsub(".*(founder).*", "founder", bill_data_clean$company.relationship)
+bill_data_clean$company.relationship <- gsub(".*(chair|chari).*", "chairman", bill_data_clean$company.relationship)
+bill_data_clean$company.relationship <- gsub(".*(director).*", "director", bill_data_clean$company.relationship)
+bill_data_clean$company.relationship <- gsub(".*(head).*", "head", bill_data_clean$company.relationship)
+bill_data_clean$company.relationship <- gsub(".*(president).*", "president", bill_data_clean$company.relationship)
+
+# drop small amount of rows with na values
+bill_data_clean <- bill_data_clean %>% drop_na()
+
+# split dataset to numeric and categorical (non-ordinal)
+bill_categorical <- bill_data_clean %>% select(where(is_character))
+bill_numeric <- bill_data_clean %>% select(where(is.numeric))
+
+# one hot encode categorical data
+bill_categorical_onehot = dummy_cols(bill_categorical, remove_first_dummy = TRUE, remove_selected_columns = TRUE)
+
+# filter indicators with 5 or more rows, indicators with less than 5 would cause problems
+bill_categorical_onehot <- bill_categorical_onehot[, colSums(bill_categorical_onehot) > 5]
+
+# concat numerical and categorical columns
+bill_data_clean <- bind_cols(bill_numeric, bill_categorical_onehot)
+```
+
+
+```{r}
+# remove variables which strongly and linearly correlate 
+correlation_threshold = 0.9
+tmp <- cor(bill_data_clean)
+tmp[upper.tri(tmp)] <- 0
+diag(tmp) <- 0  # clean diagonal which is always 1
+bill_data_clean <- bill_data_clean[, apply(tmp,2,function(x) all(x<= correlation_threshold))]
+
+# remove outliers
+# TODO: zakomentiraj ovu liniju ako ne želimo removeati outliere
+bill_data_clean <- remove_outliers(bill_data_clean, bill_data_clean$`wealth.worth in billions`)
+
+# extract y column for later use
+wealth <- bill_data_clean$`wealth.worth in billions`
+
+# TODO: zakomentiraj ovu liniju ako ne želimo logaritmirati cijenu
+# wealth <- log(wealth, 2)
+```
+
+```{r}
+# x setup, y = wealth
+normalized<-function(y) {
+  x<-y[!is.na(y)]
+  x<-(x - min(x)) / (max(x) - min(x))
+  y[!is.na(y)]<-x
+  return(y)
+}
+
+# `wealth.how.industry_Retail, Restaurant` casues fitting issues
+exclude_cols = c("wealth.worth in billions", "wealth.how.industry_Retail, Restaurant")
+x <- bill_data_clean %>% select(-one_of(exclude_cols))
+x[, c("company.founded", "demographics.age")] <- apply(x[, c("company.founded", "demographics.age")] , 2 , normalized) # minmax scaling
+x <- x[,order(colnames(x))]
+
+```
+
+```{r}
+model_all_vars <- lm(wealth ~ . , x)
+summary(model_all_vars)
+```
+
+```{r}
+### Pronalazak najboljih prediktora na sljedeći način: fittaj linearnu regresiju na svakom indikatoru pojedinačno
+### sortaj najbolje regressore po p vrijednosti
+
+n = 10
+filtered_col_names = c()
+r_squares = c()
+ps = c()
+col_names=colnames(x)
+
+for(i in 1:ncol(x)){
+  
+  col_name=col_names[i]
+  model=lm(wealth ~ x[[col_name]]) # create model with a single regressor and predict wealth
+  
+  summary_model = summary(model)
+  
+  filtered_col_names <- append(filtered_col_names, col_name)
+  r_squares <- append(r_squares, summary_model$r.squared)
+  # Density, distribution function, quantile function and random generation for the F distribution with df1 and df2 degrees of freedom (and optional non-centrality parameter ncp).
+  # a.k.a get P value from f statistics
+  f <- summary_model$fstatistic
+  ps <- append(ps,  pf(f[1], f[2], f[3], lower.tail=FALSE))
+}
+
+df_g_squares=data.frame(filtered_col_names, r_squares, ps)
+head(df_g_squares, n=3)
+df_g_squares
+
+# sort (by minimal r_squares) and find top n predictors
+df_top_predictors = df_g_squares[order(-df_g_squares$r_squares), ]
+
+top_n_predictors_one_var_lin = as.vector(df_top_predictors$filtered_col_names)[1:n]
+df_top_predictors
+```
+
+
+
+```{r}
+# pronalazak najboljih regressora s ANOVA-om
+# nađi P vrijednosti za svaki regressor 
+# mergaj regressore od prošlog koraka i ukolni duplikate
+# dobivene regresore koristi za model
+
+a <- anova(model_all_vars)
+ps_a <- a$`Pr(>F)`
+ps_a <- head(ps_a, -1) # anova returns NA for last element
+
+ps_a_ord <- order(ps_a)
+sorted_cols <- colnames(x)[order(colnames(x))]
+top_predictors_anova <- sorted_cols[ps_a_ord][1:n]
+cat ("Best ANOVA regressors:")
+top_predictors_anova
+
+top_predictors = c(top_predictors_anova, top_n_predictors_one_var_lin)
+top_predictors <- top_predictors[!duplicated(top_predictors)]
+cat ("\nTop predictors for a new model:")
+top_predictors
+
+model_top_preds <- lm(wealth ~ . , x[, top_predictors])
+summary(model_top_preds)
+
+# micanjem nekih od ovih regresora se povećava Adjusted R-squared
+```
+
+
+
+
+```{r, collapse=TRUE}
+require(nortest)
+
+# reziduali u ovisnosti o procjenama modela
+plot(model_top_preds$fitted.values, model_top_preds$residuals) 
+
+# provjera normalnosti reziduala
+hist(rstandard(model_top_preds))
+qqnorm(rstandard(model_top_preds))
+ks.test(rstandard(model_top_preds),'pnorm')
+lillie.test(rstandard(model_top_preds))
+```
+
+
 
 ## 4. Kada biste birali karijeru isključivo prema kriteriju da se obogatite, koju biste industriju izabrali?
 
