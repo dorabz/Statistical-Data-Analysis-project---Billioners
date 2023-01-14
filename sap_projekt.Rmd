@@ -356,10 +356,36 @@ Također, zanimaju nas samo najnoviji milijarderi odnosno oni s popisa iz 2014. 
 ```{r}
 #
 non_inherited_2014 <- non_inherited[non_inherited$year == 2014,]
+non_inherited_2001 <- non_inherited[non_inherited$year == 2001,]
+non_inherited_2014_new = bill_data[FALSE,]
+non_inherited_2001_old = bill_data[FALSE,]
+
+# selekcija novonastalih milijardera iz 2014. koji nisu bili na prethodnoj listi iz 2001.
+for(i in 1:nrow(non_inherited_2014)) {
+  r <- non_inherited_2014[i,]
+  if(sum(str_detect(non_inherited_2001$name, r[[1]])) == 0) {
+    non_inherited_2014_new <- rbind(non_inherited_2014_new, non_inherited_2014[i,])
+  }
+}
+
+# selekcija milijardera iz 2001. koji nisu na listi iz 2014.
+for(i in 1:nrow(non_inherited_2001)) {
+  r <- non_inherited_2001[i,]
+  if(sum(str_detect(non_inherited_2014$name, r[[1]])) == 0) {
+    non_inherited_2001_old <- rbind(non_inherited_2001_old, non_inherited_2001[i,])
+  }
+}
 
 par(mar=c(10,5,1,1))
 barplot(sort(table(subset(non_inherited_2014$wealth.how.industry, non_inherited_2014$wealth.how.industry != "0")), decreasing = TRUE),
-        main = "Billionaires distribution by industry (non-inherited wealth)",
+        main = "Billionaires distribution by industry in 2014 (non-inherited wealth)",
         las = 2)
+barplot(sort(table(subset(non_inherited_2014_new$wealth.how.industry, non_inherited_2014_new$wealth.how.industry != "0")), decreasing = TRUE),
+        main = "Newcomer billionaires distribution by industry (non-inherited wealth)",
+        las = 2)
+barplot(sort(table(subset(non_inherited_2001_old$wealth.how.industry, non_inherited_2001_old$wealth.how.industry != "0")), decreasing = TRUE),
+        main = "Former billionaires distribution by industry (non-inherited wealth)",
+        las = 2)
+
 ```
 
