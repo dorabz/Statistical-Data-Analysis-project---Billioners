@@ -493,6 +493,7 @@ bill_data_clean <- bill_data_clean[, apply(tmp,2,function(x) all(x<= correlation
 
 bill_data_clean <- remove_outliers(bill_data_clean, bill_data_clean$`wealth.worth in billions`)
 wealth <- bill_data_clean$`wealth.worth in billions`
+
 ```
 Prije stvaranja linearnog modela pogledajmo kojih 5 varijabli najviše lienarno koorelira sa `wealth.worth in billions`. Rezultati koje dobijemo ne možemo direktno koristiti za statističko zaključivanje, ali možemo kasnije usporediti linearne koorelacije sa rezultatima i zaključcima koje ćemo dobiti nakon stvaranja linearnog modela.
 ```{r}
@@ -521,7 +522,7 @@ x <- x[,order(colnames(x))]
 
 ```
 
-Prvi linaerni model stovrili smo naivno na načim da smo iskoristili sve moguće regresore. Provjerom vrijednosti `adj.r.squared` saznati ćemo koliki postotak varijance u podacima opisuje stvoreni linaerni model. Također, provjeriti ćemo koji regresori objašnjavaju najveći postotak varijance na način da ih poredamo po p vrijednostima.
+Prvi linearni model stvorili smo naivno na način da smo iskoristili sve moguće regresore. Provjerom vrijednosti `adj.r.squared` saznati ćemo koliki postotak varijance u podacima opisuje stvoreni linaerni model. Također, provjeriti ćemo koji regresori objašnjavaju najveći postotak varijance na način da ih poredamo po p vrijednostima.
 ```{r}
 cat("Ukupan broj regresora:", length(colnames(x)), "\n")
 p_value_column <- 4
@@ -586,17 +587,19 @@ summary(model_top_preds)
 ```
 Pokazali smo da smanjenjem broja regresora na 14 i dalje objašnjavamo usporedivo velik dio varijance (6.1%, originalo 7.7%). Ovisno o namjeni i potrebama možemo se opredijeliti za složeniji ili jednostavniji model. Jednostavniji model je preferiraniji ukoliko je realtivno dobar kao neki alternativni složeniji model.
 
-
-
-Za kraj, provjeritit ćemo prepostavku linearnog modela (normalnost reziduala) grafički i korištenjem Kolmogorov-Smirnov i Lilliefors testa  .
+Za kraj, provjeritit ćemo prepostavku linearnog modela (normalnost reziduala) grafički i korištenjem Kolmogorov-Smirnov i Lilliefors testa.
 ```{r, collapse=TRUE}
 require(nortest)
-plot(model_top_preds$fitted.values, model_top_preds$residuals) 
 hist(rstandard(model_top_preds))
 qqnorm(rstandard(model_top_preds))
+qqline(rstandard(model_top_preds), col = "blue", lwd = 2)
 ks.test(rstandard(model_top_preds),'pnorm')
 lillie.test(rstandard(model_top_preds))
 ```
+
+Iz histogram se može naslutiti da se distribucija reziduala ne ravna po normalnoj distribuciji. Vrijednosti nisu centrirane oko nule i uočavamo debele desne repove. Iz qq grafa jasno uočavamo problem teškog desnog repa i manje problematičnog laganog lijevog repa. Ovaj graf dodatno potvrđuje da se reziduali ne ravnaju po normalnoj distribuciji. Konačno, oba testa za normalnost ukazuju da se reziduali ne ravnaju po normalnoj distribuciji jer je p vrijednost je manja od 0.05.
+
+S obzirom na to da je pretpostavka linearnog modela prekršena i da linearan model objašnjava svega 6.2% varijance za reaktor `wealth.worth in billions` odbacujemo mogućnost da linearnim modelom previđamo bogatsvo koristeći preostale varijable iz skupa podataka.
 
 
 
