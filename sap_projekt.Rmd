@@ -469,30 +469,29 @@ značajno bogatiji od onih koji nisu.
 
 ## 3. Možete li iz danih varijabli predvidjeti njihovo bogatstvo?
 
-Cilj ovog pitanja je provjeritit postoji li statistički značajna veza između više ulaznih varijabli (regresora) i izlazne varijable (reakcije,  `wealth.worth in billions`). Korištenjem modela linearne regresije provjeritit ćemo koji regresori najviše utječu na izlaznu varijabu.
+Cilj ovog pitanja je provjeritit postoji li statistički značajna veza između više ulaznih varijabli (regresora) i izlazne varijable (reakcije,  `wealth.worth in billions`). Korištenjem modela linearne regresije provjerit ćemo koji regresori najviše utječu na izlaznu varijabu.
 
 Pretpostavke modela:
 
 - linearnost veze X i Y
 - pogreške nezavisne, homogene i normalno distribuirane s $\epsilon \sim N (0, \sigma^2 )$
 
-
-Za predobrardu podataka radimo sljedeće stvari:
+Za predobradu podataka radimo sljedeće stvari:
 
 - Izbacujemo nepotrebne regresore:
   - name
   - company.name
   - rank
-  - location.gdp, više od pola vrijednosti su 0 (netočan podatak)
-  - location.coutnry.code i location.citizenship a koristimo location.region koji je veće granulacije
-  - wealth.how.from emerging, wealth.how.was founder, wealth.how.was political su konstantne varijable
-  - company.sector jer ima previše različitih vrijednosti, koje kad bi one hot encodali bi dali previše stupaca
+  - location.gdp: više od pola vrijednosti su 0 (netočan podatak)
+  - location.country.code i location.citizenship: koristimo location.region koji je veće granulacije
+  - wealth.how.from emerging, wealth.how.was founder, wealth.how.was political: konstantne varijable
+  - company.sector: jer ima previše različitih vrijednosti, koje kad bi one hot encodali bi dali previše stupaca
   - wealth.type_inherited, već sadržan u `inherited`
 - ignoriramo uzorke s netočnim podacima (kriva dob)
 - povećavamo granulaciju varijable relationship (slične/iste vrijednosti svodimu na jednu)
 - izbacujemo manji broj uzoraka koji sadržne null vrijednosti
 
-Sve kategorijske varijable obrađujemo na način da ih pretvorimo u dummy varijable. Svaka kategorijska varijabla predstavljena je svojom novom vlastitom varijablom koja poprima vrijednost 1 u slučaju da originalna katergorijska varijabla odgovara novoj varijabli, inače je vrijednost 0.
+Sve kategorijske varijable obrađujemo na način da ih pretvorimo u dummy varijable. Svaka kategorijska varijabla predstavljena je svojom novom vlastitom varijablom koja poprima vrijednost 1 u slučaju da originalna kategorijska varijabla odgovara novoj varijabli, inače je vrijednost 0.
 
 Za filtrirani podatkovni skup sve iznose `wealth.worth in billions` množimo sa 1 + (kupovna moć dolara svedena na godinu 2014).
 
@@ -532,7 +531,7 @@ bill_data_clean <- bind_cols(bill_numeric, bill_categorical_onehot)
 ```
 
 
-Bitna pretpostavka multivarijatne linearne regresije je da ne postoji snažna linearna korelacija regresora modela. U ovom koraku provjeriti ćemo postoje li parovi takvih regresori i otkloniti ih ukoliko postoje. Odbaciti ćemo sve regresore za koji postoji neki drugi regresor čiji je aposlutna vrijednost Pearsonovog koeficijenta korelacije veća od 0.9. 
+Bitna pretpostavka multivarijatne linearne regresije je da ne postoji snažna linearna korelacija regresora modela. U ovom koraku provjeriti ćemo postoje li parovi takvih regresora i otkloniti ih ukoliko postoje. Odbaciti ćemo sve regresore za koje postoji neki drugi regresor čiji je aposlutna vrijednost Pearsonovog koeficijenta korelacije veća od 0.9. 
 
 ```{r}
 correlation_threshold = 0.9
@@ -544,7 +543,10 @@ bill_data_clean <- bill_data_clean[, apply(tmp,2,function(x) all(x<= correlation
 bill_data_clean <- remove_outliers(bill_data_clean, bill_data_clean$`wealth.worth in billions`)
 wealth <- bill_data_clean$`wealth.worth in billions`
 ```
-Prije stvaranja linearnog modela pogledajmo kojih 5 varijabli najviše lienarno koorelira sa `wealth.worth in billions`. Rezultati koje dobijemo ne možemo direktno koristiti za statističko zaključivanje, ali možemo kasnije usporediti linearne koorelacije sa rezultatima i zaključcima koje ćemo dobiti nakon stvaranja linearnog modela.
+
+
+Prije stvaranja linearnog modela pogledajmo kojih 5 varijabli najviše lienarno koorelira sa `wealth.worth in billions`. Rezultate koje dobijemo ne možemo direktno koristiti za statističko zaključivanje, ali možemo kasnije usporediti linearne koorelacije sa rezultatima i zaključcima koje ćemo dobiti nakon stvaranja linearnog modela.
+
 ```{r}
 w <- corr_table[, "wealth.worth in billions"]
 w <- abs(w)
@@ -571,7 +573,9 @@ x <- x[,order(colnames(x))]
 
 ```
 
+
 Prvi linearni model stvorili smo naivno na način da smo iskoristili sve moguće regresore. Provjerom vrijednosti `adj.r.squared` saznati ćemo koliki postotak varijance u podacima opisuje stvoreni linaerni model. Također, provjeriti ćemo koji regresori objašnjavaju najveći postotak varijance na način da ih poredamo po p vrijednostima.
+
 ```{r}
 cat("Ukupan broj regresora:", length(colnames(x)), "\n")
 p_value_column <- 4
@@ -584,9 +588,9 @@ cat("Prvih 5 regresora sortiranih uzlazno po p vrijednosti:\n")
 coef_sorted[1:5,]
 ```
 
-U ovom slučaju, najveći postotak varijance u podacima za izlaznu varijablu `wealth.worth in billions` objašnjava regresor `demographics.age`. Trenutan model objašnjava svega 7.7% varijance u podacima (Adjusted $R=0.07766$) za reakciju `wealth.worth in billions`. Na žalost, ovaj model ne objašnjava velik dio varijance u podacima.
+U ovom slučaju, najveći postotak varijance u podacima za izlaznu varijablu `wealth.worth in billions` objašnjava regresor `demographics.age`. Trenutan model objašnjava svega 7.7% varijance u podacima (Adjusted $R=0.07766$) za reakciju `wealth.worth in billions`. Na žalost, ovaj model ne objašnjava veliki dio varijance u podacima.
 
-Sad ćemo pokušati pronaći najbolje prediktore na sljedeći način: stvarati ćemo model lienarne regresije za svaki regresor pojedinačno, i očitavati ćemo koliko oni statistički značajno objašnjavaju varijancu u podacima (očitavamo p vrijednosti svakog modela nakon fittanja)
+Sada ćemo pokušati pronaći najbolje prediktore na sljedeći način: stvarati ćemo model lienarne regresije za svaki regresor pojedinačno, i očitavati koliko oni statistički značajno objašnjavaju varijancu u podacima (očitavamo p vrijednosti svakog modela nakon fittanja).
 
 
 ```{r}
@@ -614,7 +618,8 @@ df_top_predictors[1:n, ]
 top_n_predictors_one_var_lin <- df_top_predictors[1:n, "filtered_col_names"]
 ```
 
-Možemo zaključiti da kad bi smo morali napraviti linearni model koji najbolje predviđa reaktor `wealth.worth in billions`, odabrali bi smo upravo regresor `wealth.how.inherited_not inherited`. Međutim ako želimo napraviti multivarijatni linearni model, nije nužno istina da će najbolji model biti onaj za koji uzmemo prvih n regresora iz trenutne liste. Problem koji se može pojaviti takvim pristupom odabira regresora je da postoje regresori koji su međusobno zavisni (iako smo već prethodno otklonii jako zavisne regresore).
+
+Možemo zaključiti da kad bi smo morali napraviti linearni model koji najbolje predviđa reaktor `wealth.worth in billions`, odabrali bi smo upravo regresor `wealth.how.inherited_not inherited`. Međutim ako želimo napraviti multivarijantni linearni model, nije nužno istina da će najbolji model biti onaj za koji uzmemo prvih n regresora iz trenutne liste. Problem koji se može pojaviti takvim pristupom odabira regresora je da postoje regresori koji su međusobno zavisni (iako smo već prethodno otklonili jako zavisne regresore).
 
 Najbolje regresore također možemo pronaći ANOVA-om. Kada dodamo ili izbrišemo prediktivnu varijablu iz linearne regresije, želimo znati je li ta promjena poboljšala model ili nije. ANOVA uspoređuje dva regresijska modela i javlja jesu li značajno različiti. Spojiti ćemo najbolje regresore koje smo dobili ANOVOM i najbolje regresore dobivene u prethodnom koraku da stvorimo novi linearni model s manje regresora.
 
@@ -634,11 +639,12 @@ cat("Broj regersora", length(top_predictors))
 model_top_preds <- lm(wealth ~ . , x[, top_predictors])
 summary(model_top_preds)
 ```
-Pokazali smo da smanjenjem broja regresora na 14 i dalje objašnjavamo usporedivo velik dio varijance (6.1%, originalo 7.7%). Ovisno o namjeni i potrebama možemo se opredijeliti za složeniji ili jednostavniji model. Jednostavniji model je preferiraniji ukoliko je realtivno dobar kao neki alternativni složeniji model.
+
+Pokazali smo da smanjenjem broja regresora na 14 i dalje objašnjavamo usporedivo veliki dio varijance (6.1%, originalo 7.7%). Ovisno o namjeni i potrebama možemo se opredijeliti za složeniji ili jednostavniji model. Jednostavniji model je preferiraniji ukoliko je realtivno dobar kao neki alternativni složeniji model.
 
 
+Za kraj, provjeritit ćemo prepostavku linearnog modela (normalnost reziduala) grafički i korištenjem Kolmogorov-Smirnov i Lilliefors testa.
 
-Za kraj, provjeritit ćemo prepostavku linearnog modela (normalnost reziduala) grafički i korištenjem Kolmogorov-Smirnov i Lilliefors testa  .
 ```{r, collapse=TRUE}
 require(nortest)
 hist(rstandard(model_top_preds))
@@ -650,7 +656,7 @@ lillie.test(rstandard(model_top_preds))
 
 Iz histogram se može naslutiti da se distribucija reziduala ne ravna po normalnoj distribuciji. Vrijednosti nisu centrirane oko nule i uočavamo debele desne repove. Iz qq grafa jasno uočavamo problem teškog desnog repa i manje problematičnog laganog lijevog repa. Ovaj graf dodatno potvrđuje da se reziduali ne ravnaju po normalnoj distribuciji. Konačno, oba testa za normalnost ukazuju da se reziduali ne ravnaju po normalnoj distribuciji jer je p vrijednost je manja od 0.05.
 
-S obzirom na to da je pretpostavka linearnog modela prekršena i da linearan model objašnjava svega 6.2% varijance za reaktor `wealth.worth in billions` odbacujemo mogućnost da linearnim modelom previđamo bogatsvo koristeći preostale varijable iz skupa podataka.
+S obzirom na to da je pretpostavka linearnog modela prekršena i da linearan model objašnjava svega 6.2% varijance za reaktor `wealth.worth in billions` odbacujemo mogućnost da linearnim modelom previđamo bogatstvo koristeći preostale varijable iz skupa podataka.
 
 
 
