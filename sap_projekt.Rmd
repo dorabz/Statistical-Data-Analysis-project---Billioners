@@ -70,7 +70,8 @@ remove_outliers <- function(data, data_column) {
 cat('\n Dimenzija podataka: ', dim(bill_data))
 ```
 
-
+Svaki milijarder(2614) u danim podatcima sadrži 21 atribut koji ga opisuje. Neki od njih su: broj godina, spol,
+državljanstvo, porijeklo bogatstva, struka, vrijednost imovine, itd.
 
 ```{r}
 for (col_name in names(bill_data)){
@@ -83,23 +84,64 @@ for (col_name in names(bill_data)){
 ```
 
 Naš dataset sastoji se od character i numeric varijabli.
-Prvo promotrimo numeričke varijable.
+Prvo promotrimo numeričku varijablu wealth.
 ```{r}
 
 hist(bill_data$`wealth.worth in billions` ,main='wealth worth in billions', xlab='wealth', ylab='Frequency', col="pink")
 
-boxplot(bill_data$`wealth.worth in billions`)
+
 summary(bill_data$`wealth.worth in billions`)
 
 ```
+
+
+
+Ovaj histogram nam prikazuje distribuciju bogatstva. Možemo vidjeti da se "wealth" ne ravna po normalnoj distribuciji i da je jako malo onih s velikom količinom bogatstva. To nam pokazuju i rezultati koje smo dobili - srednja vrijednost i medijan.
+
+
+
 ```{r}
 
 barplot(table(bill_data$wealth.type),las=2,cex.names=.9,main='Wealth type',col="pink")
+
+
+```
+
+
+
+Na ovom grafu vidimo koji tip bogatstva je najzastupljeniji. Najviše ima onih koji su najslijedili bogatstvo.
+
+
+
+```{r}
 barplot(table(bill_data$wealth.how.industry),las=2,cex.names=.7,main='Industry',col="pink")
-print('Podjela po spolu: ')
+
+
+```
+
+Na ovom grafu vidimo koje industrije su najzastupljenije kod milijardera. Najviše je onih u potrošačkoj industriji (consumer), a slijede ih oni koji se bave nekretninama, maloprodajom i restoranima. 
+
+
+
+
+```{r}
+
 table(bill_data$demographics.gender)
 
 ```
+
+
+Ovdje vidimo da muškarci značajno prevladavaju u broju milijardera naspram žena i supružnika.
+
+```{r}
+median(bill_data$demographics.age)
+mean(bill_data$demographics.age)
+
+
+
+```
+
+Ako idemo proučiti milijardere po godinama, možemo vidjeti da je izračunata srednja vrijednost za varijablu starost 53 godine. Medijan iznosi 59 godina, odnosno kada bi ih poredali od najmlađeg do najstarijeg, vrijednost u sredini bila bi 59 godina. To znači da je više onih milijardera koji su u stariji, odnosno u drugoj polovici života.
 
 # Pitanja
 
@@ -128,10 +170,14 @@ table(bill_data$location.region)
 
 ```
 S obzirom da imamo regiju Middle East/North Africa trebamo ih rastaviti na kontinente kojima pripadaju (Azija i Afrika). Prvo želimo vidjeti koje sve države postoje u toj regiji u našem datasetu pomoću državljanstva.
-```{r}
+Također imamo jednu državu čija regija ima vrijednost 0, a država je Bermuda. Dakle, nju ćemo kasnije u kodu svrstati pod kontinent Sjeverna Amerika.
+
+
+```{r, results='hide'}
 
 
 bill_data$location.citizenship[bill_data$location.region == "Middle East/North Africa"]
+bill_data$location.citizenship[bill_data$location.region == "0"]
 
 ```
 
@@ -165,6 +211,10 @@ for (column_name in c("Sub-Saharan Africa")){
 # združimo Sjevernu Ameriku
 for (column_name in c("North America")){
   bill_data_copy$location.region[bill_data_copy$location.region == column_name] = "North America";
+  
+  for (column_name in c("Bermuda")){
+  bill_data_copy$location.region[bill_data_copy$location.citizenship == column_name] = "North America";
+}
 }
 
 # Združimo Južnu Ameriku
@@ -198,34 +248,11 @@ print(tbl)
 
 
 
-```{r, echo=FALSE}
-df <- data.frame(continent=c("Europe", "Asia", "Africa","North America","South America", "Australia"),
-                continent_frequency=c(697, 699, 43, 959, 182, 33))
-head(df)
-```
-library(ggplot2)
-```{r}
 
-# Barplot
-#p<-ggplot(data=df, aes(x=continent, y=continent_frequency), col="pink") +
-#  geom_bar(stat="identity")
-#p
-
-
-box_edu <- ggplot(bill_data_copy %>% filter(!location.region=="0"), aes(x=location.region, y= wealth.worth.in.billions, fill=location.region)) +
-    geom_boxplot(alpha=0.7, ) + scale_y_log10() +
-    theme(legend.position="none") + labs(x="Continent",y="Wealth")+
-    scale_fill_brewer(name="Continent",palette="GnBu")
-box_edu
-
-```
-
-
-
-
-```
 Sada kad smo završili s pripremom podataka za ovaj zadatak, možemo započeti sa statističkim testovima.
-Pretpostavke ANOVA-e su:
+ANOVA je parametarski test kojim se uspoređuju srednje vrijednosti više uzoraka te se na temelju F-testa donosi zaključak o postojanju značajnih razlika između tih srednjih vrijednosti. Na taj se način analizira utjecaj jedne ili više nezavisnih varijabli na jednu numericku kontinuiranu (zavisnu) varijablu.
+U ovom slučaju razmatrat ćemo location.region kao varijablu koja određuje grupe (populacije) i wealth kao zavisnu varijablu.
+Pretpostavke jednofaktorske ANOVA-e su:
 
 - nezavisnost pojedinih podataka u uzorcima,
 - normalna razdioba podataka,
@@ -235,15 +262,19 @@ Nezavisnost uzoraka je zadovoljena s obzirom da jedna osoba ne potječe s više 
 
 Kad su veličine grupa podjednake, ANOVA je relativno robusna metoda na blaga odstupanja od pretpostavke normalnosti i homogenosti varijanci. Ipak, dobro je provjeriti koliko su ta odstupanja velika. 
 
-Provjeru normalnosti za svaku pojedinu grupu napravit ćemo Lillieforsovom inačicom KS testa. U ovom slučaju razmatrat ćemo location.region kao varijablu koja određuje grupe (populacije) i wealth kao zavisnu varijablu.
+Provjeru normalnosti za svaku pojedinu grupu napravit ćemo Lillieforsovom inačicom KS testa. 
 
 Pretpostavke Lillieforsevog testa:
-H0... podaci se ravnaju po normalnoj distribuciji
-H1... podaci se ne ravnaju po normalnoj distribuciji
+
+$$ \begin{aligned}
+H_0&: \ podaci\  se \ ravnaju\ po \ normalnoj\ distribuciji\\
+H_1&: \ podaci\  se \ ne\  ravnaju\ po \ normalnoj\ distribuciji\\
+\end{aligned} $$
+
 
 ```{r, fig.height = 4, fig.width = 5}
 
-# TODO: zakomentiraj ovu liniju ako ne želimo logaritmirati cijenu
+# logaritmirali smo wealth kako bi dobili lijepšu distribuciju na grafovima
 
 wealth <- log(bill_data_copy$wealth.worth.in.billions, 2)
 
@@ -266,16 +297,22 @@ hist(wealth[bill_data_copy$location.region=='Asia'], main = "Histogram of wealth
 hist(wealth[bill_data_copy$location.region=='Australia'], main = "Histogram of wealth in Australia", xlab="Wealth", col= "pink")
 
 ```
-Po rezultatima testa za normalnost (male p vrijednosti) te dobijenim histogramima vidimo da nam normalnost baš i nije zadovoljena. Nastavit ćemo sa provjerom homogenosti varijanci Bartlettovim testom. Njegove pretpostavke su:
-H0... varijance između populacija su jednake
-H1... varijance su različite
+
+
+
+
+
+Po rezultatima testa za normalnost (p vrijednosti manje od 0.05) te dobijenim histogramima vidimo da nam normalnost i nije zadovoljena. Nastavit ćemo sa provjerom homogenosti varijanci Bartlettovim testom. Njegove pretpostavke su:
+$$ \begin{aligned}
+H_0&: \ varijance\ su\ jednake\\
+H_1&: \ varijance\ se \ razlikuju \\
+\end{aligned} $$
 
 ```{r test homogenosti}
 
 # Testiranje homogenosti varijance uzoraka Bartlettovim testom
-bill_data_copy2= bill_data_copy%>% filter(!location.region=="0")
-wealth2 <- log(bill_data_copy2$wealth.worth.in.billions, 2)
-bartlett.test(wealth2 ~ bill_data_copy2$location.region )
+
+bartlett.test(wealth ~ bill_data_copy$location.region )
 
 
 var((wealth[bill_data_copy$location.region=='Africa']))
@@ -286,15 +323,17 @@ var((wealth[bill_data_copy$location.region=='South America']))
 var((wealth[bill_data_copy$location.region=='Australia']))
 
 ```
-S obzirom da na temelju ovih rezultata odbacujemo nultu hipotezu da su nam varijance jednake, ne možemo koristiti ANOVA test. Prvo ćemo prikazati na boxplot grafu ovisnost varijable bogatstva o kontinentu kako bi grafički mogli interpretirati rezultat, a zatim ćemo da utvrdimo sigurnost rezultata koristiti neparametarski Kruskal - Wallis test kao alternativu jednofaktorskoj ANOVA-i.
+
+
+S obzirom da na temelju ovih rezultata(p=0.0009 < 0.05) odbacujemo nultu hipotezu da su nam varijance jednake, ne možemo koristiti ANOVA test. Prvo ćemo prikazati na boxplot grafu ovisnost varijable bogatstva o kontinentu kako bi grafički mogli interpretirati rezultat, a zatim ćemo utvrditi sigurnost rezultata koristiti neparametarski Kruskal - Wallis test kao alternativu jednofaktorskoj ANOVA-i.
 
 
  
 
-```{r, width=6}
+```{r}
 
 # Graficki prikaz podataka
-boxplot(wealth2 ~ bill_data_copy2$location.region, xlab="Continent", ylab="Wealth", col= "pink")
+boxplot(wealth ~ bill_data_copy$location.region, xlab="Continent", ylab="Wealth", col= "pink")
 
 ```
 Izračunajmo sada srednje vrijednosti bogatstva za svaki kontinent.
@@ -302,29 +341,37 @@ Izračunajmo sada srednje vrijednosti bogatstva za svaki kontinent.
 
 ```{r}
 
-mean_all= mean(bill_data_copy2$wealth.worth.in.billions)
+mean_all= mean(bill_data_copy$wealth.worth.in.billions)
 mean_all
-mean_by_continent <- bill_data_copy2 %>% 
+mean_by_continent <- bill_data_copy %>% 
   group_by(location.region) %>% 
   summarize(mean_continent = mean(wealth.worth.in.billions))
 mean_by_continent
 
 
+
 ```
-Vidimo po našem grafu i brojkama da ima manje razlike između srednjih vrijednosti varijable wealth podijeljene po kontinentima.Sada idemo vidjeti je li ta razlika statistički značajna. Ovaj test služi za testiranje jednakosti srednjih vrijednosti u jednofaktorskoj analizi varijance.
+Razmatrajući graf i numeričke rezultate koje smo dobili utvrdili smo da ima manje razlike između srednjih vrijednosti varijable wealth podijeljene po kontinentima.Sada idemo vidjeti je li ta razlika statistički značajna. Ovaj test služi za testiranje jednakosti srednjih vrijednosti u jednofaktorskoj analizi varijance.
 Pretpostavke Kruskal -Wallis testa :
-H0... nema razlike između populacija
-H1... ima razlike
+
+
+$$ \begin{aligned}
+H_0&: \ nema\ razlike\ među \ populacijama\\
+H_1&: \ postoji \ razlika \ među\ populacijama\ (barem\ dvije\ \ se \ razlikuju)\\
+\end{aligned} $$
+
 ```{r}
 
 # Alternativa ANOVI - Kruskal - Wallis test
 
-kruskal.test(bill_data_copy2$wealth.worth.in.billions ~ bill_data_copy2$location.region)
+kruskal.test(bill_data_copy$wealth.worth.in.billions ~ bill_data_copy$location.region)
 
 
 ```
 
-Kako je p-vrijednost manja od nivoa značajnosti od 0.05, možemo zaključiti da ima statistički značajne razlike između milijardi dijeljenim po kontinentima.
+Kako je p-vrijednost manja od nivoa značajnosti od 0.05, možemo zaključiti da ima statistički značajne razlike između milijardi dijeljenim po kontinentima (među barem 2 kontinenta). Dakle, pomoću našeg izračuna srednjih vrijednosti i grafa možemo utvrditi da Sjeverna Amerika prednjači u količini bogatstva, a odmah iza nje nalazi se Europa.
+
+
 
 ## 2. Jesu li milijarderi koji su nasljedili bogastvo statistički značajno bogatiji od onih koji nisu?
 
@@ -358,11 +405,11 @@ Kako bi bolje vizualizirali podatke crtamo histogram i box plot za svaki od
 slučaja:
 
 ```{r}
-hist(inherited$`wealth.worth in billions`, breaks = 20)
-boxplot(inherited$`wealth.worth in billions`)
+hist(inherited$`wealth.worth in billions`, breaks = 20, main = "Histogram of wealth that is inherited", xlab="inherited wealth", col= "pink")
+boxplot(inherited$`wealth.worth in billions`, col = "pink")
 
-hist(non_inherited$`wealth.worth in billions`, breaks = 20)
-boxplot(non_inherited$`wealth.worth in billions`)
+hist(non_inherited$`wealth.worth in billions`, breaks = 20, main = "Histogram of wealth that is not inherited", xlab="non inherited wealth", col= "pink")
+boxplot(non_inherited$`wealth.worth in billions`, col ="pink")
 ```
 
 Iz prikazane vizualizacije uočavamo kako se podaci ne ravnaju po
@@ -493,7 +540,6 @@ bill_data_clean <- bill_data_clean[, apply(tmp,2,function(x) all(x<= correlation
 
 bill_data_clean <- remove_outliers(bill_data_clean, bill_data_clean$`wealth.worth in billions`)
 wealth <- bill_data_clean$`wealth.worth in billions`
-
 ```
 Prije stvaranja linearnog modela pogledajmo kojih 5 varijabli najviše lienarno koorelira sa `wealth.worth in billions`. Rezultati koje dobijemo ne možemo direktno koristiti za statističko zaključivanje, ali možemo kasnije usporediti linearne koorelacije sa rezultatima i zaključcima koje ćemo dobiti nakon stvaranja linearnog modela.
 ```{r}
@@ -587,7 +633,9 @@ summary(model_top_preds)
 ```
 Pokazali smo da smanjenjem broja regresora na 14 i dalje objašnjavamo usporedivo velik dio varijance (6.1%, originalo 7.7%). Ovisno o namjeni i potrebama možemo se opredijeliti za složeniji ili jednostavniji model. Jednostavniji model je preferiraniji ukoliko je realtivno dobar kao neki alternativni složeniji model.
 
-Za kraj, provjeritit ćemo prepostavku linearnog modela (normalnost reziduala) grafički i korištenjem Kolmogorov-Smirnov i Lilliefors testa.
+
+
+Za kraj, provjeritit ćemo prepostavku linearnog modela (normalnost reziduala) grafički i korištenjem Kolmogorov-Smirnov i Lilliefors testa  .
 ```{r, collapse=TRUE}
 require(nortest)
 hist(rstandard(model_top_preds))
@@ -637,24 +685,24 @@ for(i in 1:nrow(non_inherited_2001)) {
 
 par(mar=c(10,7,1,1))
 barplot(sort(table(subset(non_inherited_2014$wealth.how.industry, non_inherited_2014$wealth.how.industry != "0")), decreasing = TRUE),
-        main = "Distribucija milijardera po industrijama u 2014.",
-        las = 2)
+        main = "Distribution of billionaires by industry in 2014",
+        las = 2, col="pink")
 ```
 Iz stupčastog grafa je vidljivo da su tri najzastupljenije industrije maloprodaja (trgovački lanci, lanci restorana), trgovina nekretninama i računalna tehnologija.
 
 ```{r}
 par(mar=c(10,5,1,1))
 barplot(sort(table(subset(non_inherited_2014_new$wealth.how.industry, non_inherited_2014_new$wealth.how.industry != "0")), decreasing = TRUE),
-        main = "Distribucija novonastalih milijardera po industrijama u 2014.",
-        las = 2)
+        main = "Distribution of newly made billionaires by industry in 2014",
+        las = 2, col ="pink")
 ```
 Ako usporedimo ovaj graf s prethodnim može se vidjeti da su vrlo slični, jedina razlika je u poretku medijske industrije. To nam govori da se broj milijardera po industrijama mijenja otprilike istom brzinom, odnosno da industrije s najviše milijardera dobivaju najveći broj novih milijardera (i obrnuto).
 
 ```{r}
 par(mar=c(10,5,1,1))
 barplot(sort(table(subset(non_inherited_2001_old$wealth.how.industry, non_inherited_2001_old$wealth.how.industry != "0")), decreasing = TRUE),
-        main = "Distribucija bivših milijardera po industrijama iz 2001.",
-        las = 2)
+        main = "Distribution of ex-billionaires by industry in 2001",
+        las = 2, col="pink")
 ```
 Na posljednjem grafu možemo potvrditi prethodno uočeno kretanje medijske industrije. Za razliku od ostalih industrija, broj milijardera u medijskoj industriji jedini je toliko značajno pao da je medijska industrija pala u ukupnom poretku. Sukladno tome na ovom grafu vidimo da je medijska industrija doživjela neproporcionalan pad broja milijardera. Međutim, medijska industrija nije među najvećim industrijama tako da ne utječe na zaključak, odnosno tri najzastupljenije industrije nisu se promjenile.
 
