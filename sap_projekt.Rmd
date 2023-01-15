@@ -580,13 +580,11 @@ lillie.test(rstandard(model_top_preds))
 ## 4. Kada biste birali karijeru isključivo prema kriteriju da se obogatite, koju biste industriju izabrali?
 
 Pretpostavljamo da karijerom u određenoj industriji, a ne nasljedstvom zarađujemo novac. Zbog toga gledamo samo milijardere koji nisu nasljedili svoje bogatstvo.
-Također, zanimaju nas samo najnoviji milijarderi odnosno oni s popisa iz 2014. godine.
+Također, zanimaju nas samo najnoviji milijarderi odnosno oni s popisa iz 2014. godine, jer su vremenski najrelevantniji. 
+Uz taj skup milijardera, uzet ćemo i skup milijardera iz 2014. koji nisu bili na popisu 2001., odnosno novonastale milijardere. Na tom skupu vidjet će se u kojim industrijama je nastalo najviše milijardera.
+Za kraj ćemo uzeti u razmatranje i skup milijardera koji su bili na popisu 2001. godine, ali zbog određenog razloga više nisu. Tu ćemo vidjeti koje su industrije u tom razdoblju izgubile najviše milijardera.
 
- + kako prikazati trend kroz godine na grafu (dijagram paralelnih koordinata?)
- + možda gledati razliku iz popisa 2014 i 2001, odnosno nove milijardere - pa napraviti raspodjelu industrija novonastalih milijardera
-
-```{r}
-#
+```{r, results='hide'}
 non_inherited_2014 <- non_inherited[non_inherited$year == 2014,]
 non_inherited_2001 <- non_inherited[non_inherited$year == 2001,]
 non_inherited_2014_new = bill_data[FALSE,]
@@ -607,17 +605,31 @@ for(i in 1:nrow(non_inherited_2001)) {
     non_inherited_2001_old <- rbind(non_inherited_2001_old, non_inherited_2001[i,])
   }
 }
-
-par(mar=c(10,5,1,1))
-barplot(sort(table(subset(non_inherited_2014$wealth.how.industry, non_inherited_2014$wealth.how.industry != "0")), decreasing = TRUE),
-        main = "Billionaires distribution by industry in 2014 (non-inherited wealth)",
-        las = 2)
-barplot(sort(table(subset(non_inherited_2014_new$wealth.how.industry, non_inherited_2014_new$wealth.how.industry != "0")), decreasing = TRUE),
-        main = "Newcomer billionaires distribution by industry (non-inherited wealth)",
-        las = 2)
-barplot(sort(table(subset(non_inherited_2001_old$wealth.how.industry, non_inherited_2001_old$wealth.how.industry != "0")), decreasing = TRUE),
-        main = "Former billionaires distribution by industry (non-inherited wealth)",
-        las = 2)
-
 ```
 
+```{r}
+
+par(mar=c(10,7,1,1))
+barplot(sort(table(subset(non_inherited_2014$wealth.how.industry, non_inherited_2014$wealth.how.industry != "0")), decreasing = TRUE),
+        main = "Distribucija milijardera po industrijama u 2014.",
+        las = 2)
+```
+Iz stupčastog grafa je vidljivo da su tri najzastupljenije industrije maloprodaja (trgovački lanci, lanci restorana), trgovina nekretninama i računalna tehnologija.
+
+```{r}
+par(mar=c(10,5,1,1))
+barplot(sort(table(subset(non_inherited_2014_new$wealth.how.industry, non_inherited_2014_new$wealth.how.industry != "0")), decreasing = TRUE),
+        main = "Distribucija novonastalih milijardera po industrijama u 2014.",
+        las = 2)
+```
+Ako usporedimo ovaj graf s prethodnim može se vidjeti da su vrlo slični, jedina razlika je u poretku medijske industrije. To nam govori da se broj milijardera po industrijama mijenja otprilike istom brzinom, odnosno da industrije s najviše milijardera dobivaju najveći broj novih milijardera (i obrnuto).
+
+```{r}
+par(mar=c(10,5,1,1))
+barplot(sort(table(subset(non_inherited_2001_old$wealth.how.industry, non_inherited_2001_old$wealth.how.industry != "0")), decreasing = TRUE),
+        main = "Distribucija bivših milijardera po industrijama iz 2001.",
+        las = 2)
+```
+Na posljednjem grafu možemo potvrditi prethodno uočeno kretanje medijske industrije. Za razliku od ostalih industrija, broj milijardera u medijskoj industriji jedini je toliko značajno pao da je medijska industrija pala u ukupnom poretku. Sukladno tome na ovom grafu vidimo da je medijska industrija doživjela neproporcionalan pad broja milijardera. Međutim, medijska industrija nije među najvećim industrijama tako da ne utječe na zaključak, odnosno tri najzastupljenije industrije nisu se promjenile.
+
+Zaključno, industrije koje se mogu predložiti na temelju ovih grafova su ponajprije maloprodaja, trgovanje nekretninama i računalna tehnologija. Te industrije najbolji su odabir za početak karijere s ciljem postajanja milijarderom ponajprije zbog najveće količine milijardera u tim industrijama (i sukladno tome najvećeg broja novonastalih milijardera).
