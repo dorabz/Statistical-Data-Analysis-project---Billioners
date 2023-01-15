@@ -647,7 +647,7 @@ Za kraj, provjerit ćemo pretpostavku linearnog modela (normalnost reziduala) gr
 
 ```{r, collapse=TRUE}
 require(nortest)
-hist(rstandard(model_top_preds))
+hist(rstandard(model_top_preds), col="pink")
 qqnorm(rstandard(model_top_preds))
 qqline(rstandard(model_top_preds), col = "blue", lwd = 2)
 ks.test(rstandard(model_top_preds),'pnorm')
