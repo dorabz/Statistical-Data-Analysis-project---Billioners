@@ -25,9 +25,9 @@ library(fastDummies)
 
 Pitanja:
 
-1. Ima li neki kontinent statistički značajno više miljarda?
+1. Ima li neki kontinent statistički značajno više milijarda?
 
-2. Jesu li milijarderi koji su nasljedili bogastvo statistički značajno bogatiji od onih koji nisu?
+2. Jesu li milijarderi koji su naslijedili bogatstvo statistički značajno bogatiji od onih koji nisu?
 
 3. Možete li iz danih varijabli predvidjeti njihovo bogatstvo?
 
@@ -112,7 +112,7 @@ barplot(table(bill_data$wealth.type),las=2,cex.names=.9,main='Wealth type',col="
 
 
 
-Na ovom grafu vidimo koji tip bogatstva je najzastupljeniji. Najviše ima onih koji su najslijedili bogatstvo.
+Na ovom grafu vidimo koji tip bogatstva je najzastupljeniji. Najviše ima onih koji su naslijedili bogatstvo.
 
 
 
@@ -144,13 +144,13 @@ mean(bill_data$demographics.age)
 
 ```
 
-Ako idemo proučiti milijardere po godinama, možemo vidjeti da je izračunata srednja vrijednost za varijablu starost 53 godine. Medijan iznosi 59 godina, odnosno kada bi ih poredali od najmlađeg do najstarijeg, vrijednost u sredini bila bi 59 godina. To znači da je više onih milijardera koji su u stariji, odnosno u drugoj polovici života.
+Ako idemo proučiti milijardere po godinama, možemo vidjeti da je izračunata srednja vrijednost za varijablu starost 53 godine. Medijan iznosi 59 godina, odnosno kada bi ih poredali od najmlađeg do najstarijeg, vrijednost u sredini bila bi 59 godina. To znači da je više onih milijardera koji su stariji, odnosno u drugoj polovici života.
 
 # Pitanja
 
-## 1. Ima li neki kontinent statistički značajno više miljardi?
+## 1. Ima li neki kontinent statistički značajno više milijardi?
 
-Za početak želimo vidjeti je li svim milijarderima u našem datasetu dodijeljen kontinent. S obzirom da kontinent kao varijabla ne postoji, koristit ćemo regiju (location.region). Sada želimo izlistati sve regije koje postoje u datasetu.
+Za početak želimo vidjeti je li svim milijarderima u našem datasetu dodijeljen kontinent. S obzirom na to da kontinent kao varijabla ne postoji, koristit ćemo regiju (location.region). Sada želimo izlistati sve regije koje postoje u datasetu.
 ```{r}
 levels(factor(bill_data$location.region))
 ```
@@ -172,7 +172,7 @@ table(bill_data$location.region)
 
 
 ```
-S obzirom da imamo regiju Middle East/North Africa trebamo ih rastaviti na kontinente kojima pripadaju (Azija i Afrika). Prvo želimo vidjeti koje sve države postoje u toj regiji u našem datasetu pomoću državljanstva.
+S obzirom na to da imamo regiju Middle East/North Africa trebamo ih rastaviti na kontinente kojima pripadaju (Azija i Afrika). Prvo želimo vidjeti koje sve države postoje u toj regiji u našem datasetu pomoću državljanstva.
 Također imamo jednu državu čija regija ima vrijednost 0, a država je Bermuda. Dakle, nju ćemo kasnije u kodu svrstati pod kontinent Sjeverna Amerika.
 
 
@@ -253,7 +253,7 @@ print(tbl)
 
 
 Sada kad smo završili s pripremom podataka za ovaj zadatak, možemo započeti sa statističkim testovima.
-ANOVA je parametarski test kojim se uspoređuju srednje vrijednosti više uzoraka te se na temelju F-testa donosi zaključak o postojanju značajnih razlika između tih srednjih vrijednosti. Na taj se način analizira utjecaj jedne ili više nezavisnih varijabli na jednu numericku kontinuiranu (zavisnu) varijablu.
+ANOVA je parametarski test kojim se uspoređuju srednje vrijednosti više uzoraka te se na temelju F-testa donosi zaključak o postojanju značajnih razlika između tih srednjih vrijednosti. Na taj se način analizira utjecaj jedne ili više nezavisnih varijabli na jednu numeričku kontinuiranu (zavisnu) varijablu.
 U ovom slučaju razmatrat ćemo location.region kao varijablu koja određuje grupe (populacije) i wealth kao zavisnu varijablu.
 Pretpostavke jednofaktorske ANOVA-e su:
 
@@ -261,7 +261,7 @@ Pretpostavke jednofaktorske ANOVA-e su:
 - normalna razdioba podataka,
 - homogenost varijanci među populacijama. 
 
-Nezavisnost uzoraka je zadovoljena s obzirom da jedna osoba ne potječe s više kontinenata.
+Nezavisnost uzoraka je zadovoljena s obzirom na to da jedna osoba ne potječe s više kontinenata.
 
 Kad su veličine grupa podjednake, ANOVA je relativno robusna metoda na blaga odstupanja od pretpostavke normalnosti i homogenosti varijanci. Ipak, dobro je provjeriti koliko su ta odstupanja velika. 
 
@@ -277,7 +277,7 @@ H_1&: \ podaci\  se \ ne\  ravnaju\ po \ normalnoj\ distribuciji\\
 
 ```{r, fig.height = 4, fig.width = 5}
 
-# logaritmirali smo wealth kako bi dobili lijepšu distribuciju na grafovima
+# logaritmirali smo wealth kako bi dobili ljepšu distribuciju na grafovima
 
 wealth <- log(bill_data_copy$wealth.worth.in.billions, 2)
 
@@ -305,7 +305,7 @@ hist(wealth[bill_data_copy$location.region=='Australia'], main = "Histogram of w
 
 
 
-Po rezultatima testa za normalnost (p vrijednosti manje od 0.05) te dobijenim histogramima vidimo da nam normalnost i nije zadovoljena. Nastavit ćemo sa provjerom homogenosti varijanci Bartlettovim testom. Njegove pretpostavke su:
+Po rezultatima testa za normalnost (p vrijednosti manje od 0.05) te dobivenim histogramima vidimo da nam normalnost i nije zadovoljena. Nastavit ćemo s provjerom homogenosti varijanci Bartlettovim testom. Njegove pretpostavke su:
 $$ \begin{aligned}
 H_0&: \ varijance\ su\ jednake\\
 H_1&: \ varijance\ se \ razlikuju \\
@@ -328,7 +328,7 @@ var((wealth[bill_data_copy$location.region=='Australia']))
 ```
 
 
-S obzirom da na temelju ovih rezultata(p=0.0009 < 0.05) odbacujemo nultu hipotezu da su nam varijance jednake, ne možemo koristiti ANOVA test. Prvo ćemo prikazati na boxplot grafu ovisnost varijable bogatstva o kontinentu kako bi grafički mogli interpretirati rezultat, a zatim ćemo utvrditi sigurnost rezultata koristiti neparametarski Kruskal - Wallis test kao alternativu jednofaktorskoj ANOVA-i.
+S obzirom na to da na temelju ovih rezultata(p=0.0009 < 0.05) odbacujemo nultu hipotezu da su nam varijance jednake, ne možemo koristiti ANOVA test. Prvo ćemo prikazati na boxplot grafu ovisnost varijable bogatstva o kontinentu kako bi grafički mogli interpretirati rezultat, a zatim ćemo utvrditi sigurnost rezultata koristiti neparametarski Kruskal - Wallis test kao alternativu jednofaktorskoj ANOVA-i.
 
 
  
@@ -376,11 +376,11 @@ Kako je p-vrijednost manja od nivoa značajnosti od 0.05, možemo zaključiti da
 
 
 
-## 2. Jesu li milijarderi koji su nasljedili bogastvo statistički značajno bogatiji od onih koji nisu?
+## 2. Jesu li milijarderi koji su naslijedili bogatstvo statistički značajno bogatiji od onih koji nisu?
 
 Potrebno je pripremiti podatke za obradu, razdvojiti podatke iz tablice po polju
-how.inherited u dva slučaja: inherited (oni koju su nasljedili bogatstvo) i 
-non_inherited (oni koji nisu nasljedili bogatstvo).
+how.inherited u dva slučaja: inherited (oni koju su naslijedili bogatstvo) i 
+non_inherited (oni koji nisu naslijedili bogatstvo).
 
 ```{r, results='hide'}
 inherited = bill_data[bill_data$wealth.how.inherited!="not inherited",]
@@ -400,7 +400,7 @@ print(non_inherited_mean)
 ```
 
 Na temelju male razlike u srednjim vrijednostima, ne postoje indikacije da su 
-milijarderi koji su nasljedili bogatstvo statistički značajno bogatiji 
+milijarderi koji su naslijedili bogatstvo statistički značajno bogatiji 
 od onih koji nisu. No, navedeno je potrebno provjeriti.
 
 
@@ -444,7 +444,7 @@ Time je potvrđena pretpostavka da se podaci ne ravnaju po normalnoj distribucij
 Potrebno je koristiti neparametarski test Mann–Whitney U test, koji se koristi 
 kada se podaci se ravnaju po istim distribucijama (obje distribucije su nakošene
 u desno) i uzorci su nezavisni iz jedne i druge populacije (jedna osoba ne može
-nasljediti i nenasljediti bogatstvo).
+naslijediti i nenaslijediti bogatstvo).
 
 
 Hipoteze glase:
@@ -462,14 +462,14 @@ wilcox.test(inherited_mean, non_inherited_mean, alt = "greater")
 
 Zbog p-vrijednost jednake 0.5, na temelju značajnosti od 50% ne možemo odbaciti 
 $H_0$ hipotezu o jednakosti prosječnih vrijednosti bogatstva u korist $H_1$, 
-odnosno možemo reći da milijarderi koji su nasljedili bogatstvo nisu statistički
+odnosno možemo reći da milijarderi koji su naslijedili bogatstvo nisu statistički
 značajno bogatiji od onih koji nisu.
 
 
 
 ## 3. Možete li iz danih varijabli predvidjeti njihovo bogatstvo?
 
-Cilj ovog pitanja je provjeritit postoji li statistički značajna veza između više ulaznih varijabli (regresora) i izlazne varijable (reakcije,  `wealth.worth in billions`). Korištenjem modela linearne regresije provjerit ćemo koji regresori najviše utječu na izlaznu varijabu.
+Cilj ovog pitanja je provjeriti postoji li statistički značajna veza između više ulaznih varijabli (regresora) i izlazne varijable (reakcije,  `wealth.worth in billions`). Korištenjem modela linearne regresije provjerit ćemo koji regresori najviše utječu na izlaznu varijablu.
 
 Pretpostavke modela:
 
@@ -489,11 +489,11 @@ Za predobradu podataka radimo sljedeće stvari:
   - wealth.type_inherited, već sadržan u `inherited`
 - ignoriramo uzorke s netočnim podacima (kriva dob)
 - povećavamo granulaciju varijable relationship (slične/iste vrijednosti svodimu na jednu)
-- izbacujemo manji broj uzoraka koji sadržne null vrijednosti
+- izbacujemo manji broj uzoraka koji sadrži null vrijednosti
 
-Sve kategorijske varijable obrađujemo na način da ih pretvorimo u dummy varijable. Svaka kategorijska varijabla predstavljena je svojom novom vlastitom varijablom koja poprima vrijednost 1 u slučaju da originalna kategorijska varijabla odgovara novoj varijabli, inače je vrijednost 0.
+Sve kategorijske varijable obrađujemo tako da ih pretvorimo u dummy varijable. Svaka kategorijska varijabla predstavljena je svojom novom vlastitom varijablom koja poprima vrijednost 1 u slučaju da originalna kategorijska varijabla odgovara novoj varijabli, inače je vrijednost 0.
 
-Za filtrirani podatkovni skup sve iznose `wealth.worth in billions` množimo sa 1 + (kupovna moć dolara svedena na godinu 2014).
+Za filtrirani podatkovni skup sve iznose `wealth.worth in billions` množimo s 1 + (kupovna moć dolara svedena na godinu 2014).
 
 ```{r}
 exclude_cols = c("name", "company.name", "rank", "location.gdp", "location.country code", "location.citizenship", "wealth.how.from emerging", "wealth.how.was founder", "wealth.how.was political", "company.sector")
@@ -531,7 +531,7 @@ bill_data_clean <- bind_cols(bill_numeric, bill_categorical_onehot)
 ```
 
 
-Bitna pretpostavka multivarijatne linearne regresije je da ne postoji snažna linearna korelacija regresora modela. U ovom koraku provjeriti ćemo postoje li parovi takvih regresora i otkloniti ih ukoliko postoje. Odbaciti ćemo sve regresore za koje postoji neki drugi regresor čiji je aposlutna vrijednost Pearsonovog koeficijenta korelacije veća od 0.9. 
+Bitna pretpostavka multivarijatne linearne regresije je da ne postoji snažna linearna korelacija regresora modela. U ovom koraku provjerit ćemo postoje li parovi takvih regresora i otkloniti ih ako postoje. Odbacit ćemo sve regresore za koje postoji neki drugi regresor čiji je apsolutna vrijednost Pearsonovog koeficijenta korelacije veća od 0.9. 
 
 ```{r}
 correlation_threshold = 0.9
@@ -545,7 +545,7 @@ wealth <- bill_data_clean$`wealth.worth in billions`
 ```
 
 
-Prije stvaranja linearnog modela pogledajmo kojih 5 varijabli najviše lienarno koorelira sa `wealth.worth in billions`. Rezultate koje dobijemo ne možemo direktno koristiti za statističko zaključivanje, ali možemo kasnije usporediti linearne koorelacije sa rezultatima i zaključcima koje ćemo dobiti nakon stvaranja linearnog modela.
+Prije stvaranja linearnog modela pogledajmo kojih 5 varijabli najviše linearno korelira sa `wealth.worth in billions`. Rezultate koje dobijemo ne možemo direktno koristiti za statističko zaključivanje, ali možemo kasnije usporediti linearne korelacije s rezultatima i zaključcima koje ćemo dobiti nakon stvaranja linearnog modela.
 
 ```{r}
 w <- corr_table[, "wealth.worth in billions"]
@@ -574,7 +574,7 @@ x <- x[,order(colnames(x))]
 ```
 
 
-Prvi linearni model stvorili smo naivno na način da smo iskoristili sve moguće regresore. Provjerom vrijednosti `adj.r.squared` saznati ćemo koliki postotak varijance u podacima opisuje stvoreni linaerni model. Također, provjeriti ćemo koji regresori objašnjavaju najveći postotak varijance na način da ih poredamo po p vrijednostima.
+Prvi linearni model stvorili smo naivno tako da smo iskoristili sve moguće regresore. Provjerom vrijednosti `adj.r.squared` saznat ćemo koliki postotak varijance u podacima opisuje stvoreni linearni model. Također, provjerit ćemo koji regresori objašnjavaju najveći postotak varijance tako da ih poredamo po p vrijednostima.
 
 ```{r}
 cat("Ukupan broj regresora:", length(colnames(x)), "\n")
@@ -590,7 +590,7 @@ coef_sorted[1:5,]
 
 U ovom slučaju, najveći postotak varijance u podacima za izlaznu varijablu `wealth.worth in billions` objašnjava regresor `demographics.age`. Trenutan model objašnjava svega 7.7% varijance u podacima (Adjusted $R=0.07766$) za reakciju `wealth.worth in billions`. Na žalost, ovaj model ne objašnjava veliki dio varijance u podacima.
 
-Sada ćemo pokušati pronaći najbolje prediktore na sljedeći način: stvarati ćemo model lienarne regresije za svaki regresor pojedinačno, i očitavati koliko oni statistički značajno objašnjavaju varijancu u podacima (očitavamo p vrijednosti svakog modela nakon fittanja).
+Sada ćemo pokušati pronaći najbolje prediktore na sljedeći način: stvarat ćemo model linearne regresije za svaki regresor pojedinačno, i očitavati koliko oni statistički značajno objašnjavaju varijancu u podacima (očitavamo p vrijednosti svakog modela nakon fittanja).
 
 
 ```{r}
@@ -619,9 +619,9 @@ top_n_predictors_one_var_lin <- df_top_predictors[1:n, "filtered_col_names"]
 ```
 
 
-Možemo zaključiti da kad bi smo morali napraviti linearni model koji najbolje predviđa reaktor `wealth.worth in billions`, odabrali bi smo upravo regresor `wealth.how.inherited_not inherited`. Međutim ako želimo napraviti multivarijantni linearni model, nije nužno istina da će najbolji model biti onaj za koji uzmemo prvih n regresora iz trenutne liste. Problem koji se može pojaviti takvim pristupom odabira regresora je da postoje regresori koji su međusobno zavisni (iako smo već prethodno otklonili jako zavisne regresore).
+Možemo zaključiti da kad bismo morali napraviti linearni model koji najbolje predviđa reaktor `wealth.worth in billions`, odabrali bismo upravo regresor `wealth.how.inherited_not inherited`. Međutim ako želimo napraviti multivarijatni linearni model, nije nužno istina da će najbolji model biti onaj za koji uzmemo prvih n regresora iz trenutne liste. Problem koji se može pojaviti takvim pristupom odabira regresora je da postoje regresori koji su međusobno zavisni (iako smo već prethodno otklonili jako zavisne regresore).
 
-Najbolje regresore također možemo pronaći ANOVA-om. Kada dodamo ili izbrišemo prediktivnu varijablu iz linearne regresije, želimo znati je li ta promjena poboljšala model ili nije. ANOVA uspoređuje dva regresijska modela i javlja jesu li značajno različiti. Spojiti ćemo najbolje regresore koje smo dobili ANOVOM i najbolje regresore dobivene u prethodnom koraku da stvorimo novi linearni model s manje regresora.
+Najbolje regresore također možemo pronaći ANOVA-om. Kada dodamo ili izbrišemo prediktivnu varijablu iz linearne regresije, želimo znati je li ta promjena poboljšala model ili nije. ANOVA uspoređuje dva regresijska modela i javlja jesu li značajno različiti. Spojit ćemo najbolje regresore koje smo dobili ANOVA-om i najbolje regresore dobivene u prethodnom koraku da stvorimo novi linearni model s manje regresora.
 
 ```{r}
 a <- anova(model_all_vars)
@@ -640,10 +640,10 @@ model_top_preds <- lm(wealth ~ . , x[, top_predictors])
 summary(model_top_preds)
 ```
 
-Pokazali smo da smanjenjem broja regresora na 14 i dalje objašnjavamo usporedivo veliki dio varijance (6.1%, originalo 7.7%). Ovisno o namjeni i potrebama možemo se opredijeliti za složeniji ili jednostavniji model. Jednostavniji model je preferiraniji ukoliko je realtivno dobar kao neki alternativni složeniji model.
+Pokazali smo da smanjenjem broja regresora na 14 i dalje objašnjavamo usporedivo veliki dio varijance (6.1%, originalno 7.7%). Ovisno o namjeni i potrebama možemo se opredijeliti za složeniji ili jednostavniji model. Jednostavniji model je preferiraniji ako je relativno dobar kao neki alternativni složeniji model.
 
 
-Za kraj, provjeritit ćemo prepostavku linearnog modela (normalnost reziduala) grafički i korištenjem Kolmogorov-Smirnov i Lilliefors testa.
+Za kraj, provjerit ćemo pretpostavku linearnog modela (normalnost reziduala) grafički i korištenjem Kolmogorov-Smirnov i Lilliefors testa.
 
 ```{r, collapse=TRUE}
 require(nortest)
@@ -662,10 +662,12 @@ S obzirom na to da je pretpostavka linearnog modela prekršena i da linearan mod
 
 ## 4. Kada biste birali karijeru isključivo prema kriteriju da se obogatite, koju biste industriju izabrali?
 
-Pretpostavljamo da karijerom u određenoj industriji, a ne nasljedstvom zarađujemo novac. Zbog toga gledamo samo milijardere koji nisu nasljedili svoje bogatstvo.
+Pretpostavljamo da karijerom u određenoj industriji, a ne nasljedstvom zarađujemo novac. Zbog toga gledamo samo milijardere koji nisu naslijedili svoje bogatstvo.
 Također, zanimaju nas samo najnoviji milijarderi odnosno oni s popisa iz 2014. godine, jer su vremenski najrelevantniji. 
 Uz taj skup milijardera, uzet ćemo i skup milijardera iz 2014. koji nisu bili na popisu 2001., odnosno novonastale milijardere. Na tom skupu vidjet će se u kojim industrijama je nastalo najviše milijardera.
 Za kraj ćemo uzeti u razmatranje i skup milijardera koji su bili na popisu 2001. godine, ali zbog određenog razloga više nisu. Tu ćemo vidjeti koje su industrije u tom razdoblju izgubile najviše milijardera.
+
+
 
 ```{r, results='hide'}
 non_inherited_2014 <- non_inherited[non_inherited$year == 2014,]
@@ -690,6 +692,9 @@ for(i in 1:nrow(non_inherited_2001)) {
 }
 ```
 
+
+
+
 ```{r}
 
 par(mar=c(10,7,1,1))
@@ -697,7 +702,11 @@ barplot(sort(table(subset(non_inherited_2014$wealth.how.industry, non_inherited_
         main = "Distribution of billionaires by industry in 2014",
         las = 2, col="pink")
 ```
+
+
 Iz stupčastog grafa je vidljivo da su tri najzastupljenije industrije maloprodaja (trgovački lanci, lanci restorana), trgovina nekretninama i računalna tehnologija.
+
+
 
 ```{r}
 par(mar=c(10,5,1,1))
@@ -705,7 +714,11 @@ barplot(sort(table(subset(non_inherited_2014_new$wealth.how.industry, non_inheri
         main = "Distribution of newly made billionaires by industry in 2014",
         las = 2, col ="pink")
 ```
+
+
 Ako usporedimo ovaj graf s prethodnim može se vidjeti da su vrlo slični, jedina razlika je u poretku medijske industrije. To nam govori da se broj milijardera po industrijama mijenja otprilike istom brzinom, odnosno da industrije s najviše milijardera dobivaju najveći broj novih milijardera (i obrnuto).
+
+
 
 ```{r}
 par(mar=c(10,5,1,1))
@@ -713,14 +726,18 @@ barplot(sort(table(subset(non_inherited_2001_old$wealth.how.industry, non_inheri
         main = "Distribution of ex-billionaires by industry in 2001",
         las = 2, col="pink")
 ```
-Na posljednjem grafu možemo potvrditi prethodno uočeno kretanje medijske industrije. Za razliku od ostalih industrija, broj milijardera u medijskoj industriji jedini je toliko značajno pao da je medijska industrija pala u ukupnom poretku. Sukladno tome na ovom grafu vidimo da je medijska industrija doživjela neproporcionalan pad broja milijardera. Međutim, medijska industrija nije među najvećim industrijama tako da ne utječe na zaključak, odnosno tri najzastupljenije industrije nisu se promjenile.
+
+
+
+Na posljednjem grafu možemo potvrditi prethodno uočeno kretanje medijske industrije. Za razliku od ostalih industrija, broj milijardera u medijskoj industriji jedini je toliko značajno pao da je medijska industrija pala u ukupnom poretku. Sukladno tome na ovom grafu vidimo da je medijska industrija doživjela neproporcionalan pad broja milijardera. Međutim, medijska industrija nije među najvećim industrijama tako da ne utječe na zaključak, odnosno tri najzastupljenije industrije nisu se promijenile.
 
 Zaključno, industrije koje se mogu predložiti na temelju ovih grafova su ponajprije maloprodaja, trgovanje nekretninama i računalna tehnologija. Te industrije najbolji su odabir za početak karijere s ciljem postajanja milijarderom ponajprije zbog najveće količine milijardera u tim industrijama (i sukladno tome najvećeg broja novonastalih milijardera).
 
 
+
 ## 5. Jesu li muškarci milijarderi statistički značajno bogatiji od žena milijardera?
 
-S obzirom da muškaraca milijardera ima značajno više nego žena (rezultate smo dobili u deskriptivnoj analizi), čak 10 puta više, zanima nas jesu li onda oni i uspješniji,odnosno bogatiji u prosjeku od žena milijardera.
+S obzirom na to da muškaraca milijardera ima značajno više nego žena (rezultate smo dobili u deskriptivnoj analizi), čak 10 puta više, zanima nas jesu li onda oni i uspješniji,odnosno bogatiji u prosjeku od žena milijardera.
 
 Postoje nedostajuće vrijednosti koje moramo izbaciti u varijabli demographics.gender(NA).
 ```{r}
@@ -741,7 +758,7 @@ men_mean = mean(men$wealth.worth.in.billions)
 men_mean
 ```
 Izračunali smo srednje vrijednosti bogatstva žena i muškaraca. Iz ovih rezultata možemo vidjeti da se rezultati ne razlikuju puno, no treba provjeriti je li ova mala razlika statistički značajna.
-Kako bi mogli provesti t-test, moramo najprije provjeriti pretpostavke normalnosti i nezavisnosti uzorka. Obzirom da razmatramo dva uzoraka različitih spolova, možemo pretpostaviti njihovu nezavisnost. Sljedeći korak je provjeriti normalnost podataka koju najčešće provjeravamo: histogramom te KS-testom (kojim provjeravamo pripadnost podataka distribuciji).
+Kako bi mogli provesti t-test, moramo najprije provjeriti pretpostavke normalnosti i nezavisnosti uzorka. Obzirom na to da razmatramo dva uzoraka različitih spolova, možemo pretpostaviti njihovu nezavisnost. Sljedeći korak je provjeriti normalnost podataka koju najčešće provjeravamo: histogramom te KS-testom (kojim provjeravamo pripadnost podataka distribuciji).
 
 ```{r}
 hist(women$wealth.worth.in.billions,
@@ -792,4 +809,4 @@ wilcox.test(women_mean, men_mean, alt = "greater")
 
 
 
-S obzirom da nam je dobijena p-vrijednost > 0.05, nemamo temelja za odbaciti nultu hipotezu, odnosno muškarci i žene se statistički značajno ne razlikuju u količini bogatstva.
+S obzirom na to da je dobivena p-vrijednost > 0.05, nemamo temelja za odbaciti nultu hipotezu, odnosno muškarci i žene se statistički značajno ne razlikuju u količini bogatstva.
