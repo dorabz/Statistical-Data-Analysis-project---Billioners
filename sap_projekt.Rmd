@@ -82,17 +82,7 @@ for (col_name in names(bill_data)){
 
 ```
 
-
-```{r}
-summary(bill_data)
-
-
-```
-```{r}
-sapply(bill_data, class)
-```
 Naš dataset sastoji se od character i numeric varijabli.
-
 Prvo promotrimo numeričke varijable.
 ```{r}
 
@@ -342,7 +332,7 @@ Potrebno je pripremiti podatke za obradu, razdvojiti podatke iz tablice po polju
 how.inherited u dva slučaja: inherited (oni koju su nasljedili bogatstvo) i 
 non_inherited (oni koji nisu nasljedili bogatstvo).
 
-```{r}
+```{r, results='hide'}
 inherited = bill_data[bill_data$wealth.how.inherited!="not inherited",]
 non_inherited = bill_data[bill_data$wealth.how.inherited=="not inherited",]
 ```
@@ -432,23 +422,25 @@ značajno bogatiji od onih koji nisu.
 Cilj ovog pitanja je provjeritit postoji li statistički značajna veza između više ulaznih varijabli (regresora) i izlazne varijable (reakcije,  `wealth.worth in billions`). Korištenjem modela linearne regresije provjeritit ćemo koji regresori najviše utječu na izlaznu varijabu.
 
 Pretpostavke modela:
-* linearnost veze X i Y
-* pogreške nezavisne, homogene i normalno distribuirane s $\epsilon \sim N (0, \sigma^2 )$
+
+- linearnost veze X i Y
+- pogreške nezavisne, homogene i normalno distribuirane s $\epsilon \sim N (0, \sigma^2 )$
 
 
 Za predobrardu podataka radimo sljedeće stvari:
-* Izbacujemo nepotrebne regresore:
-  * name
-  * company.name
-  * rank
-  * location.gdp, više od pola vrijednosti su 0 (netočan podatak)
-  * location.coutnry.code i location.citizenship a koristimo location.region koji je veće granulacije
-  * wealth.how.from emerging, wealth.how.was founder, wealth.how.was political su konstantne varijable
-  * company.sector jer ima previše različitih vrijednosti, koje kad bi one hot encodali bi dali previše stupaca
-  * wealth.type_inherited, već sadržan u `inherited`
-* ignoriramo uzorke s netočnim podacima (kriva dob)
-* povećavamo granulaciju varijable relationship (slične/iste vrijednosti svodimu na jednu)
-* izbacujemo manji broj uzoraka koji sadržne null vrijednosti
+
+- Izbacujemo nepotrebne regresore:
+  - name
+  - company.name
+  - rank
+  - location.gdp, više od pola vrijednosti su 0 (netočan podatak)
+  - location.coutnry.code i location.citizenship a koristimo location.region koji je veće granulacije
+  - wealth.how.from emerging, wealth.how.was founder, wealth.how.was political su konstantne varijable
+  - company.sector jer ima previše različitih vrijednosti, koje kad bi one hot encodali bi dali previše stupaca
+  - wealth.type_inherited, već sadržan u `inherited`
+- ignoriramo uzorke s netočnim podacima (kriva dob)
+- povećavamo granulaciju varijable relationship (slične/iste vrijednosti svodimu na jednu)
+- izbacujemo manji broj uzoraka koji sadržne null vrijednosti
 
 Sve kategorijske varijable obrađujemo na način da ih pretvorimo u dummy varijable. Svaka kategorijska varijabla predstavljena je svojom novom vlastitom varijablom koja poprima vrijednost 1 u slučaju da originalna katergorijska varijabla odgovara novoj varijabli, inače je vrijednost 0.
 
