@@ -5,7 +5,6 @@ knit: (function(input_file, encoding) {
   rmarkdown::render(input_file,
  encoding=encoding,
  output_file=file.path(dirname(input_file), out_dir, 'projekt_sap_dokumentacija.pdf'))})
-subtitle: "Uspjeh učenika u nastavi"
 author: "Dora Bezuk, Marcela Matas, Josip Arelic, Domagoj Marinello"
 date: "13.11.2022."
 output: pdf_document
@@ -116,18 +115,14 @@ table(bill_data$demographics.gender)
 
 ## 1. Ima li neki kontinent statistički značajno više miljardi?
 
+Za početak želimo vidjeti je li svim milijarderima u našem datasetu dodijeljen kontinent. S obzirom da kontinent kao varijabla ne postoji, koristit ćemo regiju (location.region). Sada želimo izlistati sve regije koje postoje u datasetu.
 ```{r}
 levels(factor(bill_data$location.region))
 ```
 
-```{r}
-class(bill_data$location.region)
-
-```
-Treba li tip stupca biti factor?
 
 
-Ima li nedostajućih vrijednosti?
+Ima li nedostajućih vrijednosti? 
 ```{r}
 # is.na ce nam vratiti logical vektor koji ima TRUE na mjestima gdje ima NA:
 sum(is.na(bill_data$location.region)) 
@@ -142,7 +137,7 @@ table(bill_data$location.region)
 
 
 ```
-
+S obzirom da imamo regiju Middle East/North Africa trebamo ih rastaviti na kontinente kojima pripadaju (Azija i Afrika). Prvo želimo vidjeti koje sve države postoje u toj regiji u našem datasetu pomoću državljanstva.
 ```{r}
 
 
@@ -152,8 +147,7 @@ bill_data$location.citizenship[bill_data$location.region == "Middle East/North A
 
 Sada možemo združiti podatke ovisno o kontinentu.
 
-Kopirajmo najprije podatke u novi data.frame kako ne bi promijenili prave vrijednosti.
-
+Kopirajmo najprije podatke u novi data.frame (bill_data_copy).
 ```{r}
 bill_data_copy = data.frame(bill_data)
 tracemem(bill_data)==tracemem(bill_data_copy)
@@ -164,12 +158,12 @@ untracemem(bill_data_copy)
 
 
 ```{r,results='hide'}
-# Zdruzimo Europu
+# Združimo Europu
 for (column_name in c("Europe")){
   bill_data_copy$location.region[bill_data_copy$location.region == column_name] = "Europe";
 }
 
-# Zdruzimo Afriku
+# Združimo Afriku
 for (column_name in c("Lebanon","Egypt","Morocco","Algeria")){
   bill_data_copy$location.region[bill_data_copy$location.citizenship == column_name] = "Africa";
 }
@@ -178,22 +172,27 @@ for (column_name in c("Sub-Saharan Africa")){
   bill_data_copy$location.region[bill_data_copy$location.region == column_name] = "Africa";
 }
 
-# zdruzimo Sjevernu Ameriku
+# združimo Sjevernu Ameriku
 for (column_name in c("North America")){
   bill_data_copy$location.region[bill_data_copy$location.region == column_name] = "North America";
 }
 
-# Zdruzimo Južnu Ameriku
+# Združimo Južnu Ameriku
 for (column_name in c("Latin America")){
   bill_data_copy$location.region[bill_data_copy$location.region == column_name] = "South America";
 }
 
-# Zdruzimo Aziju
+# Združimo Aziju
 for (column_name in c("East Asia","South Asia")){
   bill_data_copy$location.region[bill_data_copy$location.region == column_name] = "Asia";
 }
 for (column_name in c("Saudi Arabia","Kuwait","United Arab Emirates","Israel","Turkey","Oman","Bahrain")){
   bill_data_copy$location.region[bill_data_copy$location.citizenship == column_name] = "Asia";
+}
+
+#Združimo Australiju
+for (column_name in c("Australia")){
+  bill_data_copy$location.region[bill_data_copy$location.citizenship == column_name] = "Australia";
 }
 
 
@@ -207,48 +206,52 @@ print(tbl)
 ```
 
 
-##continent_frequency=transform(bill_data_copy,continent_frequency=ave(seq(nrow(bill_data_copy)),location.region ,FUN=length)
-df1=transform(bill_data_copy,continent_frequency=ave(seq(nrow(bill_data_copy)),location.region ,FUN=length))
-df1
 
-```{r}
-df <- data.frame(continent=c("Europe", "Asia", "Africa","North America","South America"),
-                continent_frequency=c(697, 699, 43, 992, 182))
+
+```{r, echo=FALSE}
+df <- data.frame(continent=c("Europe", "Asia", "Africa","North America","South America", "Australia"),
+                continent_frequency=c(697, 699, 43, 959, 182, 33))
 head(df)
-
+```
 library(ggplot2)
-
+```{r}
 
 # Barplot
-p<-ggplot(data=df, aes(x=continent, y=continent_frequency)) +
-  geom_bar(stat="identity")
-p
+#p<-ggplot(data=df, aes(x=continent, y=continent_frequency), col="pink") +
+#  geom_bar(stat="identity")
+#p
 
 
 box_edu <- ggplot(bill_data_copy %>% filter(!location.region=="0"), aes(x=location.region, y= wealth.worth.in.billions, fill=location.region)) +
     geom_boxplot(alpha=0.7, ) + scale_y_log10() +
-    stat_summary(fun=mean, geom="point", shape=20, size=7, color="black", fill="black") +
     theme(legend.position="none") + labs(x="Continent",y="Wealth")+
     scale_fill_brewer(name="Continent",palette="GnBu")
 box_edu
 
-
+```
 
 
 
 
 ```
+Sada kad smo završili s pripremom podataka za ovaj zadatak, možemo započeti sa statističkim testovima.
 Pretpostavke ANOVA-e su:
 
 - nezavisnost pojedinih podataka u uzorcima,
 - normalna razdioba podataka,
 - homogenost varijanci među populacijama. 
 
+Nezavisnost uzoraka je zadovoljena s obzirom da jedna osoba ne potječe s više kontinenata.
+
 Kad su veličine grupa podjednake, ANOVA je relativno robusna metoda na blaga odstupanja od pretpostavke normalnosti i homogenosti varijanci. Ipak, dobro je provjeriti koliko su ta odstupanja velika. 
 
-Provjera normalnosti može se za svaku pojedinu grupu napraviti KS testom ili Lillieforsovom inačicom KS testa. U ovom slučaju razmatrat ćemo location.region kao varijablu koja određuje grupe (populacije) i wealth kao zavisnu varijablu.
+Provjeru normalnosti za svaku pojedinu grupu napravit ćemo Lillieforsovom inačicom KS testa. U ovom slučaju razmatrat ćemo location.region kao varijablu koja određuje grupe (populacije) i wealth kao zavisnu varijablu.
 
-```{r test pretpostavki - normalnost}
+Pretpostavke Lillieforsevog testa:
+H0... podaci se ravnaju po normalnoj distribuciji
+H1... podaci se ne ravnaju po normalnoj distribuciji
+
+```{r, fig.height = 4, fig.width = 5}
 
 # TODO: zakomentiraj ovu liniju ako ne želimo logaritmirati cijenu
 
@@ -262,41 +265,76 @@ lillie.test(wealth[bill_data_copy$location.region=='Europe'])
 lillie.test(wealth[bill_data_copy$location.region=='South America'])
 lillie.test(wealth[bill_data_copy$location.region=='North America'])
 lillie.test(wealth[bill_data_copy$location.region=='Asia'])
+lillie.test(wealth[bill_data_copy$location.region=='Australia'])
 
 
-hist(wealth[bill_data_copy$location.region=='Africa'])
-hist(wealth[bill_data_copy$location.region=='Europe'])
-hist(wealth[bill_data_copy$location.region=='South America'])
-hist(wealth[bill_data_copy$location.region=='North America'])
-hist(wealth[bill_data_copy$location.region=='Asia'])
+hist(wealth[bill_data_copy$location.region=='Africa'], main = "Histogram of wealth in Africa", xlab="Wealth", col= "pink")
+hist(wealth[bill_data_copy$location.region=='Europe'], main = "Histogram of wealth in Europe", xlab="Wealth", col= "pink")
+hist(wealth[bill_data_copy$location.region=='South America'], main = "Histogram of wealth in South America", xlab="Wealth", col= "pink")
+hist(wealth[bill_data_copy$location.region=='North America'], main = "Histogram of wealth in North America", xlab="Wealth", col= "pink")
+hist(wealth[bill_data_copy$location.region=='Asia'], main = "Histogram of wealth in Asia", xlab="Wealth", col= "pink")
+hist(wealth[bill_data_copy$location.region=='Australia'], main = "Histogram of wealth in Australia", xlab="Wealth", col= "pink")
 
 ```
+Po rezultatima testa za normalnost (male p vrijednosti) te dobijenim histogramima vidimo da nam normalnost baš i nije zadovoljena. Nastavit ćemo sa provjerom homogenosti varijanci Bartlettovim testom. Njegove pretpostavke su:
+H0... varijance između populacija su jednake
+H1... varijance su različite
+
 ```{r test homogenosti}
 
 # Testiranje homogenosti varijance uzoraka Bartlettovim testom
+bill_data_copy2= bill_data_copy%>% filter(!location.region=="0")
+wealth2 <- log(bill_data_copy2$wealth.worth.in.billions, 2)
+bartlett.test(wealth2 ~ bill_data_copy2$location.region )
 
-##bartlett.test(bill_data_copy$wealth.worth.in.billions ~ bill_data_copy$location.region)
 
 var((wealth[bill_data_copy$location.region=='Africa']))
 var((wealth[bill_data_copy$location.region=='Asia']))
 var((wealth[bill_data_copy$location.region=='Europe']))
 var((wealth[bill_data_copy$location.region=='North America']))
 var((wealth[bill_data_copy$location.region=='South America']))
+var((wealth[bill_data_copy$location.region=='Australia']))
+
 ```
+S obzirom da na temelju ovih rezultata odbacujemo nultu hipotezu da su nam varijance jednake, ne možemo koristiti ANOVA test. Prvo ćemo prikazati na boxplot grafu ovisnost varijable bogatstva o kontinentu kako bi grafički mogli interpretirati rezultat, a zatim ćemo da utvrdimo sigurnost rezultata koristiti neparametarski Kruskal - Wallis test kao alternativu jednofaktorskoj ANOVA-i.
 
-Provjerimo postoje li razlike u prihodima za različite razine školovanja klijenata. 
 
-```{r test razlike u prihodima}
+ 
+
+```{r, width=6}
 
 # Graficki prikaz podataka
-boxplot(wealth ~ bill_data_copy$location.region)
+boxplot(wealth2 ~ bill_data_copy2$location.region, xlab="Continent", ylab="Wealth", col= "pink")
 
-# Test
-a = aov(wealth ~ bill_data_copy$location.region)
-summary(a)
+```
+Izračunajmo sada srednje vrijednosti bogatstva za svaki kontinent.
+
+
+```{r}
+
+mean_all= mean(bill_data_copy2$wealth.worth.in.billions)
+mean_all
+mean_by_continent <- bill_data_copy2 %>% 
+  group_by(location.region) %>% 
+  summarize(mean_continent = mean(wealth.worth.in.billions))
+mean_by_continent
+
+
+```
+Vidimo po našem grafu i brojkama da ima manje razlike između srednjih vrijednosti varijable wealth podijeljene po kontinentima.Sada idemo vidjeti je li ta razlika statistički značajna. Ovaj test služi za testiranje jednakosti srednjih vrijednosti u jednofaktorskoj analizi varijance.
+Pretpostavke Kruskal -Wallis testa :
+H0... nema razlike između populacija
+H1... ima razlike
+```{r}
+
+# Alternativa ANOVI - Kruskal - Wallis test
+
+kruskal.test(bill_data_copy2$wealth.worth.in.billions ~ bill_data_copy2$location.region)
+
 
 ```
 
+Kako je p-vrijednost manja od nivoa značajnosti od 0.05, možemo zaključiti da ima statistički značajne razlike između milijardi dijeljenim po kontinentima.
 
 ## 2. Jesu li milijarderi koji su nasljedili bogastvo statistički značajno bogatiji od onih koji nisu?
 
@@ -353,7 +391,7 @@ qqline(non_inherited$`wealth.worth in billions`, col = "red", lwd = 2)
 Ipak, uočeno je potrebno dodatno ispitati koristeći Kolmogorov–Smirnov test 
 kojim se utvrđuje ravna li se distribucija po normalnoj razdiobi.
 
-```{r}
+```{r, warning=FALSE}
 ks.test(inherited$`wealth.worth in billions`, y="pnorm")
 ks.test(non_inherited$`wealth.worth in billions`, y="pnorm")
 ```
