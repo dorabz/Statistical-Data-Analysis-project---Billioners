@@ -803,10 +803,9 @@ H_1&: \mu_1 > \mu_2 \quad \quad
 
 ```{r}
  
-wilcox.test(women_mean, men_mean, alt = "greater")
+wilcox.test(men_mean, women_mean, alt = "greater")
 
 ```
-
 
 
 S obzirom na to da je dobivena p-vrijednost > 0.05, nemamo temelja za odbaciti nultu hipotezu, odnosno muškarci i žene se statistički značajno ne razlikuju u količini bogatstva.
