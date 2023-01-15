@@ -429,30 +429,38 @@ značajno bogatiji od onih koji nisu.
 
 ## 3. Možete li iz danih varijabli predvidjeti njihovo bogatstvo?
 
- + je li dobro tu koristiti sve milijardere s popisa 2014 + milijarderi s prethodnih popisa (ako nisu na popisu iz 2014. godine)
- 
- 
+Cilj ovog pitanja je provjeritit postoji li statistički značajna veza između više ulaznih varijabli (regresora) i izlazne varijable (reakcije,  `wealth.worth in billions`). Korištenjem modela linearne regresije provjeritit ćemo koji regresori najviše utječu na izlaznu varijabu.
+
+Pretpostavke modela:
+* linearnost veze X i Y
+* pogreške nezavisne, homogene i normalno distribuirane s $\epsilon \sim N (0, \sigma^2 )$
+
+
+Za predobrardu podataka radimo sljedeće stvari:
+* Izbacujemo nepotrebne regresore:
+  * name
+  * company.name
+  * rank
+  * location.gdp, više od pola vrijednosti su 0 (netočan podatak)
+  * location.coutnry.code i location.citizenship a koristimo location.region koji je veće granulacije
+  * wealth.how.from emerging, wealth.how.was founder, wealth.how.was political su konstantne varijable
+  * company.sector jer ima previše različitih vrijednosti, koje kad bi one hot encodali bi dali previše stupaca
+  * wealth.type_inherited, već sadržan u `inherited`
+* ignoriramo uzorke s netočnim podacima (kriva dob)
+* povećavamo granulaciju varijable relationship (slične/iste vrijednosti svodimu na jednu)
+* izbacujemo manji broj uzoraka koji sadržne null vrijednosti
+
+Sve kategorijske varijable obrađujemo na način da ih pretvorimo u dummy varijable. Svaka kategorijska varijabla predstavljena je svojom novom vlastitom varijablom koja poprima vrijednost 1 u slučaju da originalna katergorijska varijabla odgovara novoj varijabli, inače je vrijednost 0.
+
+Za filtrirani podatkovni skup sve iznose `wealth.worth in billions` množimo sa 1 + (kupovna moć dolara svedena na godinu 2014).
+
 ```{r}
-# bill_data
-
-# Izbacujemo stupce:
-# name
-# company.name
-# rank
-# location.gdp, više od pola vrijednosti su 0 (netočan podatak)
-# location.coutnry.code i location.citizenship a koristimo location.region koji je veće granulacije
-# wealth.how.from emerging, wealth.how.was founder, wealth.how.was political su konstantne varijable
-# company.sector jer ima previše različitih vrijednosti, koje kad bi one hot encodali bi dali previše stupaca
-
 exclude_cols = c("name", "company.name", "rank", "location.gdp", "location.country code", "location.citizenship", "wealth.how.from emerging", "wealth.how.was founder", "wealth.how.was political", "company.sector")
 
-# exclude columns and sort
 bill_data_clean <- bill_data %>% select(-one_of(exclude_cols)) %>% arrange(year)
 
-# to lowercase for consistency
 bill_data_clean[["company.relationship"]] <- tolower(bill_data_clean[["company.relationship"]] )
 
-# remove invalid data
 bill_data_clean <- bill_data_clean %>% filter(demographics.age > 0)
 bill_data_clean <- bill_data_clean %>% filter(!location.region == "0")
 
@@ -464,7 +472,6 @@ bill_data_clean[bill_data_clean$year == "2001", "wealth.worth in billions"] <- b
 # Iskoristili smo godinu da ažuriramo cijene (inflacija), sad ju odbacujemo
 bill_data_clean <- bill_data_clean %>% select(., -year)
 
-# merge similar roles to avoid 1 column = 1 row data
 bill_data_clean$company.relationship <- gsub(".*\b(owner)\b.*", "owner", bill_data_clean$company.relationship)
 bill_data_clean$company.relationship <- gsub(".*(ceo|chief executive officeor|chief executive officer|chief executive|exectuitve).*", "ceo", bill_data_clean$company.relationship)
 bill_data_clean$company.relationship <- gsub(".*(founder).*", "founder", bill_data_clean$company.relationship)
@@ -473,41 +480,36 @@ bill_data_clean$company.relationship <- gsub(".*(director).*", "director", bill_
 bill_data_clean$company.relationship <- gsub(".*(head).*", "head", bill_data_clean$company.relationship)
 bill_data_clean$company.relationship <- gsub(".*(president).*", "president", bill_data_clean$company.relationship)
 
-# drop small amount of rows with na values
 bill_data_clean <- bill_data_clean %>% drop_na()
 
-# split dataset to numeric and categorical (non-ordinal)
 bill_categorical <- bill_data_clean %>% select(where(is_character))
 bill_numeric <- bill_data_clean %>% select(where(is.numeric))
-
-# one hot encode categorical data
 bill_categorical_onehot = dummy_cols(bill_categorical, remove_first_dummy = TRUE, remove_selected_columns = TRUE)
-
-# filter indicators with 5 or more rows, indicators with less than 5 would cause problems
 bill_categorical_onehot <- bill_categorical_onehot[, colSums(bill_categorical_onehot) > 5]
-
-# concat numerical and categorical columns
 bill_data_clean <- bind_cols(bill_numeric, bill_categorical_onehot)
 ```
 
 
+Bitna pretpostavka multivarijatne linearne regresije je da ne postoji snažna linearna korelacija regresora modela. U ovom koraku provjeriti ćemo postoje li parovi takvih regresori i otkloniti ih ukoliko postoje. Odbaciti ćemo sve regresore za koji postoji neki drugi regresor čiji je aposlutna vrijednost Pearsonovog koeficijenta korelacije veća od 0.9. 
+
 ```{r}
-# remove variables which strongly and linearly correlate 
 correlation_threshold = 0.9
-tmp <- cor(bill_data_clean)
+tmp <- corr_table <- cor(bill_data_clean)
 tmp[upper.tri(tmp)] <- 0
 diag(tmp) <- 0  # clean diagonal which is always 1
 bill_data_clean <- bill_data_clean[, apply(tmp,2,function(x) all(x<= correlation_threshold))]
 
-# remove outliers
-# TODO: zakomentiraj ovu liniju ako ne želimo removeati outliere
 bill_data_clean <- remove_outliers(bill_data_clean, bill_data_clean$`wealth.worth in billions`)
-
-# extract y column for later use
 wealth <- bill_data_clean$`wealth.worth in billions`
+```
+Prije stvaranja linearnog modela pogledajmo kojih 5 varijabli najviše lienarno koorelira sa `wealth.worth in billions`. Rezultati koje dobijemo ne možemo direktno koristiti za statističko zaključivanje, ali možemo kasnije usporediti linearne koorelacije sa rezultatima i zaključcima koje ćemo dobiti nakon stvaranja linearnog modela.
+```{r}
+w <- corr_table[, "wealth.worth in billions"]
+w <- abs(w)
 
-# TODO: zakomentiraj ovu liniju ako ne želimo logaritmirati cijenu
-# wealth <- log(wealth, 2)
+corr_wealth_vars <- w[order(w, decreasing = TRUE)]
+cat("")
+corr_wealth_vars[2:6]
 ```
 
 ```{r}
@@ -520,21 +522,32 @@ normalized<-function(y) {
 }
 
 # `wealth.how.industry_Retail, Restaurant` casues fitting issues
-exclude_cols = c("wealth.worth in billions", "wealth.how.industry_Retail, Restaurant")
+exclude_cols = c("wealth.worth in billions", "wealth.how.industry_Retail, Restaurant", "wealth.type_inherited")
 x <- bill_data_clean %>% select(-one_of(exclude_cols))
 x[, c("company.founded", "demographics.age")] <- apply(x[, c("company.founded", "demographics.age")] , 2 , normalized) # minmax scaling
 x <- x[,order(colnames(x))]
 
 ```
 
+Prvi linaerni model stovrili smo naivno na načim da smo iskoristili sve moguće regresore. Provjerom vrijednosti `adj.r.squared` saznati ćemo koliki postotak varijance u podacima opisuje stvoreni linaerni model. Također, provjeriti ćemo koji regresori objašnjavaju najveći postotak varijance na način da ih poredamo po p vrijednostima.
 ```{r}
+cat("Ukupan broj regresora:", length(colnames(x)), "\n")
+p_value_column <- 4
 model_all_vars <- lm(wealth ~ . , x)
-summary(model_all_vars)
+sa <- summary(model_all_vars)
+cat("Postotak varijance objašnjen linearnim modelom", sa$adj.r.squared * 100, "%\n")
+coef <- sa$coefficients
+coef_sorted <- coef[order(coef[,p_value_column]),]
+cat("Prvih 5 regresora sortiranih uzlazno po p vrijednosti:\n")
+coef_sorted[1:5,]
 ```
 
+U ovom slučaju, najveći postotak varijance u podacima za izlaznu varijablu `wealth.worth in billions` objašnjava regresor `demographics.age`. Trenutan model objašnjava svega 7.7% varijance u podacima (Adjusted $R=0.07766$) za reakciju `wealth.worth in billions`. Na žalost, ovaj model ne objašnjava velik dio varijance u podacima.
+
+Sad ćemo pokušati pronaći najbolje prediktore na sljedeći način: stvarati ćemo model lienarne regresije za svaki regresor pojedinačno, i očitavati ćemo koliko oni statistički značajno objašnjavaju varijancu u podacima (očitavamo p vrijednosti svakog modela nakon fittanja)
+
+
 ```{r}
-### Pronalazak najboljih prediktora na sljedeći način: fittaj linearnu regresiju na svakom indikatoru pojedinačno
-### sortaj najbolje regressore po p vrijednosti
 
 n = 10
 filtered_col_names = c()
@@ -545,37 +558,25 @@ col_names=colnames(x)
 for(i in 1:ncol(x)){
   
   col_name=col_names[i]
-  model=lm(wealth ~ x[[col_name]]) # create model with a single regressor and predict wealth
-  
+  model=lm(wealth ~ x[[col_name]]) # napravi lienarni model s jednim regresorom
   summary_model = summary(model)
   
   filtered_col_names <- append(filtered_col_names, col_name)
   r_squares <- append(r_squares, summary_model$r.squared)
-  # Density, distribution function, quantile function and random generation for the F distribution with df1 and df2 degrees of freedom (and optional non-centrality parameter ncp).
-  # a.k.a get P value from f statistics
-  f <- summary_model$fstatistic
-  ps <- append(ps,  pf(f[1], f[2], f[3], lower.tail=FALSE))
+  ps <- append(ps,  summary_model$coefficients[,4][2])
 }
 
 df_g_squares=data.frame(filtered_col_names, r_squares, ps)
-head(df_g_squares, n=3)
-df_g_squares
-
-# sort (by minimal r_squares) and find top n predictors
-df_top_predictors = df_g_squares[order(-df_g_squares$r_squares), ]
-
-top_n_predictors_one_var_lin = as.vector(df_top_predictors$filtered_col_names)[1:n]
-df_top_predictors
+df_top_predictors = df_g_squares[order(df_g_squares$ps), ]
+df_top_predictors[1:n, ]
+top_n_predictors_one_var_lin <- df_top_predictors[1:n, "filtered_col_names"]
 ```
 
+Možemo zaključiti da kad bi smo morali napraviti linearni model koji najbolje predviđa reaktor `wealth.worth in billions`, odabrali bi smo upravo regresor `wealth.how.inherited_not inherited`. Međutim ako želimo napraviti multivarijatni linearni model, nije nužno istina da će najbolji model biti onaj za koji uzmemo prvih n regresora iz trenutne liste. Problem koji se može pojaviti takvim pristupom odabira regresora je da postoje regresori koji su međusobno zavisni (iako smo već prethodno otklonii jako zavisne regresore).
 
+Najbolje regresore također možemo pronaći ANOVA-om. Kada dodamo ili izbrišemo prediktivnu varijablu iz linearne regresije, želimo znati je li ta promjena poboljšala model ili nije. ANOVA uspoređuje dva regresijska modela i javlja jesu li značajno različiti. Spojiti ćemo najbolje regresore koje smo dobili ANOVOM i najbolje regresore dobivene u prethodnom koraku da stvorimo novi linearni model s manje regresora.
 
 ```{r}
-# pronalazak najboljih regressora s ANOVA-om
-# nađi P vrijednosti za svaki regressor 
-# mergaj regressore od prošlog koraka i ukolni duplikate
-# dobivene regresore koristi za model
-
 a <- anova(model_all_vars)
 ps_a <- a$`Pr(>F)`
 ps_a <- head(ps_a, -1) # anova returns NA for last element
@@ -583,30 +584,22 @@ ps_a <- head(ps_a, -1) # anova returns NA for last element
 ps_a_ord <- order(ps_a)
 sorted_cols <- colnames(x)[order(colnames(x))]
 top_predictors_anova <- sorted_cols[ps_a_ord][1:n]
-cat ("Best ANOVA regressors:")
-top_predictors_anova
 
 top_predictors = c(top_predictors_anova, top_n_predictors_one_var_lin)
 top_predictors <- top_predictors[!duplicated(top_predictors)]
-cat ("\nTop predictors for a new model:")
-top_predictors
 
+cat("Broj regersora", length(top_predictors))
 model_top_preds <- lm(wealth ~ . , x[, top_predictors])
 summary(model_top_preds)
-
-# micanjem nekih od ovih regresora se povećava Adjusted R-squared
 ```
+Pokazali smo da smanjenjem broja regresora na 14 i dalje objašnjavamo usporedivo velik dio varijance (6.1%, originalo 7.7%). Ovisno o namjeni i potrebama možemo se opredijeliti za složeniji ili jednostavniji model. Jednostavniji model je preferiraniji ukoliko je realtivno dobar kao neki alternativni složeniji model.
 
 
 
-
+Za kraj, provjeritit ćemo prepostavku linearnog modela (normalnost reziduala) grafički i korištenjem Kolmogorov-Smirnov i Lilliefors testa  .
 ```{r, collapse=TRUE}
 require(nortest)
-
-# reziduali u ovisnosti o procjenama modela
 plot(model_top_preds$fitted.values, model_top_preds$residuals) 
-
-# provjera normalnosti reziduala
 hist(rstandard(model_top_preds))
 qqnorm(rstandard(model_top_preds))
 ks.test(rstandard(model_top_preds),'pnorm')
