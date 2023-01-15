@@ -33,6 +33,9 @@ Pitanja:
 
 4. Kada biste birali karijeru isključivo prema kriteriju da se obogatite, koju biste industriju izabrali?
 
+Dodatno pitanje:
+
+5. Jesu li muškarci milijarderi statistički značajno bogatiji od žena milijardera?
 
 # Deskriptivna analiza
 
@@ -707,3 +710,80 @@ barplot(sort(table(subset(non_inherited_2001_old$wealth.how.industry, non_inheri
 Na posljednjem grafu možemo potvrditi prethodno uočeno kretanje medijske industrije. Za razliku od ostalih industrija, broj milijardera u medijskoj industriji jedini je toliko značajno pao da je medijska industrija pala u ukupnom poretku. Sukladno tome na ovom grafu vidimo da je medijska industrija doživjela neproporcionalan pad broja milijardera. Međutim, medijska industrija nije među najvećim industrijama tako da ne utječe na zaključak, odnosno tri najzastupljenije industrije nisu se promjenile.
 
 Zaključno, industrije koje se mogu predložiti na temelju ovih grafova su ponajprije maloprodaja, trgovanje nekretninama i računalna tehnologija. Te industrije najbolji su odabir za početak karijere s ciljem postajanja milijarderom ponajprije zbog najveće količine milijardera u tim industrijama (i sukladno tome najvećeg broja novonastalih milijardera).
+
+
+## 5. Jesu li muškarci milijarderi statistički značajno bogatiji od žena milijardera?
+
+S obzirom da muškaraca milijardera ima značajno više nego žena (rezultate smo dobili u deskriptivnoj analizi), čak 10 puta više, zanima nas jesu li onda oni i uspješniji,odnosno bogatiji u prosjeku od žena milijardera.
+
+Postoje nedostajuće vrijednosti koje moramo izbaciti u varijabli demographics.gender(NA).
+```{r}
+bill_data_gender= bill_data_copy%>% filter(!is.na(demographics.gender))
+
+
+
+women = bill_data_gender[bill_data_gender$demographics.gender == "female",]
+men = bill_data_gender[bill_data_gender$demographics.gender == "male",]
+
+
+```
+
+```{r}
+women_mean = mean(women$wealth.worth.in.billions)
+women_mean
+men_mean = mean(men$wealth.worth.in.billions)
+men_mean
+```
+Izračunali smo srednje vrijednosti bogatstva žena i muškaraca. Iz ovih rezultata možemo vidjeti da se rezultati ne razlikuju puno, no treba provjeriti je li ova mala razlika statistički značajna.
+Kako bi mogli provesti t-test, moramo najprije provjeriti pretpostavke normalnosti i nezavisnosti uzorka. Obzirom da razmatramo dva uzoraka različitih spolova, možemo pretpostaviti njihovu nezavisnost. Sljedeći korak je provjeriti normalnost podataka koju najčešće provjeravamo: histogramom te KS-testom (kojim provjeravamo pripadnost podataka distribuciji).
+
+```{r}
+hist(women$wealth.worth.in.billions,
+     main='Histogram of womens wealth worth in billions',
+     xlab='Wealth',
+     col="pink")
+
+hist(men$wealth.worth.in.billions,
+     main='Histogram of mens wealth worth in billions',
+     xlab='Wealth',
+     col="pink")
+
+
+
+```
+
+
+Iz histograma jasno vidimo da se podaci ne ravnaju po normalnoj distribuciji. Ipak, uočeno je potrebno dodatno ispitati koristeći Kolmogorov–Smirnov test 
+kojim se utvrđuje ravna li se distribucija po normalnoj razdiobi.
+
+```{r, warning=FALSE}
+ks.test(women$wealth.worth.in.billions, y="pnorm")
+ks.test(men$wealth.worth.in.billions, y="pnorm")
+```
+
+
+Iz dobivenih p vrijednosti u oba slučaja odbacujemo mogućnost da se distribucije
+ravnaju po normalnoj razdiobi. 
+
+
+
+Potrebno je koristiti neparametarski test Mann–Whitney U test, koji se koristi 
+kada se podaci se ravnaju po istim distribucijama i uzorci su nezavisni iz jedne i druge populacije (u našem datasetu osoba ima dodijeljen spol male ili female).
+
+
+Hipoteze glase:
+$$ \begin{aligned}
+H_0&: \mu_1 = \mu_2 \\
+H_1&: \mu_1 > \mu_2 \quad \quad 
+\end{aligned} $$
+
+
+```{r}
+ 
+wilcox.test(women_mean, men_mean, alt = "greater")
+
+```
+
+
+
+S obzirom da nam je dobijena p-vrijednost > 0.05, nemamo temelja za odbaciti nultu hipotezu, odnosno muškarci i žene se statistički značajno ne razlikuju u količini bogatstva.
