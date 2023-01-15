@@ -144,7 +144,7 @@ mean(bill_data$demographics.age)
 
 ```
 
-Ako idemo proučiti milijardere po godinama, možemo vidjeti da je izračunata srednja vrijednost za varijablu starost 53 godine. Medijan iznosi 59 godina, odnosno kada bi ih poredali od najmlađeg do najstarijeg, vrijednost u sredini bila bi 59 godina. To znači da je više onih milijardera koji su stariji, odnosno u drugoj polovici života.
+Ako idemo proučiti milijardere po godinama, možemo vidjeti da je izračunata srednja vrijednost za varijablu starost 53 godine. Medijan iznosi 59 godina, odnosno kada bi ih poredali od najmlađeg do najstarijeg, vrijednost u sredini bila bi 59 godina.
 
 # Pitanja
 
