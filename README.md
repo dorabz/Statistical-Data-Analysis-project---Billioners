@@ -16,3 +16,4 @@ opis datoteka:
 * description.xlsx - opis dataseta
 * sap_projekt.Rproj - ne dirati, to otvarate nakon što klonirate projekt, u R studiju -> Open Project -> sap_projekt.Rproj
 * folder docs -> generiran pdf: projekt_sap_dokumentacija.pdf -> kod generiranja pdf-a u R studiju stisnuti opciju knit
+
