@@ -1,6 +1,8 @@
-# sap-beluga
+# Statistical Data Analysis project - Billioners
 
-Project made as a part of university course.
+Project made as a part of university course Statistical Data Analysis at FER.
+
+Set up:
 
 - za postavljane githuba u R studiju: https://resources.github.com/whitepapers/github-and-rstudio/
 
